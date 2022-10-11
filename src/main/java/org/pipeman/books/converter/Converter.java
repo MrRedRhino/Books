@@ -1,19 +1,17 @@
 package org.pipeman.books.converter;
 
 
-import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.fit.pdfdom.PDFDomTree;
 import org.fit.pdfdom.PDFDomTreeConfig;
 import org.fit.pdfdom.resource.HtmlResource;
 import org.fit.pdfdom.resource.HtmlResourceHandler;
-import org.pipeman.books.BookIndex;
 
 import java.io.*;
 
 public class Converter {
-    public static void convertBook(BookIndex.Book book, File pdfFile) throws IOException {
-        ResourceHandler handler = new ResourceHandler(book.id());
+    public static void convertBook(int bookId, File pdfFile) throws IOException {
+        ResourceHandler handler = new ResourceHandler(bookId);
         PDDocument pdf = PDDocument.load(pdfFile);
 
         PDFDomTreeConfig config = PDFDomTreeConfig.createDefaultConfig();
@@ -29,8 +27,8 @@ public class Converter {
             pdfDomTree.setStartPage(i);
             pdfDomTree.setEndPage(i);
 
-            new File("book-data/html/" + book.id()).mkdirs();
-            Writer output = new PrintWriter("book-data/html/" + book.id() + "/" + i + ".html");
+            new File("book-data/html/" + bookId).mkdirs();
+            Writer output = new PrintWriter("book-data/html/" + bookId + "/" + i + ".html");
             pdfDomTree.writeText(pdf, output);
             output.close();
         }
@@ -38,9 +36,7 @@ public class Converter {
     }
 
     public static void main(String[] args) throws IOException {
-        for (BookIndex.Book bookEntry : BookIndex.INSTANCE.books().values()) {
-            convertBook(bookEntry, new File(""));
-        }
+
     }
 
     private static class ResourceHandler implements HtmlResourceHandler {
