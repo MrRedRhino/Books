@@ -1,7 +1,7 @@
 package org.pipeman.books.search;
 
 import io.javalin.http.Context;
-import org.pipeman.books.Utils;
+import org.pipeman.books.utils.Utils;
 import org.pipeman.books.search.SearchParser.CompletionResult;
 
 import java.util.ArrayList;

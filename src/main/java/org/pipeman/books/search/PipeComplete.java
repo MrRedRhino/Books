@@ -1,7 +1,7 @@
 package org.pipeman.books.search;
 
 import org.pipeman.books.BookIndex;
-import org.pipeman.books.Utils;
+import org.pipeman.books.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
