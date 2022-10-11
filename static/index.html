@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pipeman Schulbücher</title>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, serif;
+            font-size: 18px;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        .top-nav {
+            background-color: #333;
+            overflow: hidden;
+        }
+
+        .controls {
+            background-color: #222;
+        }
+
+        .searchbar {
+            vertical-align: center;
+            height: 30px;
+            width: min(100% - 20px, 400px);
+            margin: 10px auto;
+            display: block;
+        }
+
+        .page-selector {
+            height: 30px;
+            width: 40px;
+        }
+
+        .child {
+            margin-top: 5px;
+            margin-bottom: 5px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .controls button {
+            background: #000000;
+            font-size: 20px;
+            transform: translateY(3px);
+            border: none;
+        }
+
+        .controls button:hover {
+            background-color: #ddd;
+            color: black;
+        }
+
+        .suggestions {
+            position: absolute;
+            margin: auto;
+            width: min(90%, 400px);
+            padding: 7px;
+            background: lightgray;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 42;
+        }
+
+        .list-element {
+            padding-top: 7px;
+            padding-bottom: 7px;
+        }
+
+        .list-element:hover {
+            background: darkgray;
+        }
+
+        .list-element-name {
+            font-weight: bold;
+        }
+
+        .list-element p {
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+
+        .list-element-subject {
+            color: #565656;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+<div class="top-nav">
+    <input class="searchbar" id="search" type="text" placeholder="Suche Bücher">
+</div>
+
+<div class="suggestions" id="suggestions-div" hidden>
+    <ul style="list-style: none; padding-left: 5px; margin: 5px 0 0;" id="suggestions">
+
+    </ul>
+</div>
+
+<div class="controls" id="controls" style="text-align: center" hidden>
+    <button class="control" style="color: white" onclick="changePage(-5)"><strong><<</strong></button>
+    <button class="control" style="color: white" onclick="changePage(-1)"><strong><</strong></button>
+
+    <input class="child page-selector" id="page-selector" type="text" placeholder="Seite">
+    <a id="max-page" class="child" style="color: white">/ 42</a>
+
+    <button class="control" style="color: white" onclick="changePage(1)"><strong>></strong></button>
+    <button class="control" style="color: white" onclick="changePage(5)"><strong>>></strong></button>
+</div>
+
+<div id="book-display" style="display: flex; height: 90vh; justify-content: center">
+    <iframe id="book1">
+
+    </iframe>
+    <iframe id="book2">
+
+    </iframe>
+</div>
+</body>
+</html>
+<script>
+    let currentPage;
+    let book = null;
+
+    class Book {
+        constructor(id, title, subject, pageCount) {
+            this.pageCount = pageCount;
+            this.subject = subject;
+            this.title = title;
+            this.id = id;
+        }
+
+        pageCount;
+        subject;
+        title;
+        id;
+    }
+
+    function selectBook(newBook, page = 1) {
+        book = newBook;
+        currentPage = page;
+        document.getElementById("controls").hidden = book == null;
+        document.getElementById("max-page").innerHTML = "/ " + book.pageCount;
+        setPage(page);
+    }
+
+    function changePage(lambda) {
+        setPage(currentPage + lambda);
+    }
+
+    function setPage(page, updateInputField = true) {
+        if (isNaN(page)) page = 1;
+        currentPage = Math.max(1, Math.min(book.pageCount, page));
+        if (updateInputField) document.getElementById("page-selector").value = currentPage;
+        updateView(book, currentPage);
+    }
+
+    function updateView(book, page) {
+        window.history.replaceState({}, null, "?book=" + book.id + "&page=" + page);
+
+        const url = "/api/books/" + book.id + "/";
+
+        createNewIFrame("book1", url + page);
+        if (doTwoPagesFit()) createNewIFrame("book2", url + (page + 1));
+    }
+
+    function createNewIFrame(id, src) {
+        const book1 = document.getElementById(id);
+        const parent = book1.parentNode;
+        parent.removeChild(book1);
+
+        const newFrame = document.createElement("iframe");
+        newFrame.src = src;
+        newFrame.id = id;
+        newFrame.onload = () => resizeFrame(newFrame);
+        parent.appendChild(newFrame);
+    }
+
+    function doSearch() {
+        fetch("/api/search?query=" + document.getElementById("search").value).then(r => r.json().then(resp => {
+            const list = document.getElementById("suggestions");
+            list.innerHTML = "";
+
+            for (let i = 0; i < resp.length; i++) {
+                const s = resp[i];
+                addSearchResult(list, s["book"]["title"], s["book"]["subject"], s["page"], s["book"]["id"]);
+            }
+            document.getElementById("suggestions-div").hidden = (resp.length === 0);
+        }));
+    }
+
+    function addSearchResult(ul, title, subject, page, bookId) {
+        const li = document.createElement("li");
+        li.classList.add("list-element");
+        li.appendChild(createThing("a", "list-element-name", title));
+        li.appendChild(createThing("a", "list-element-subject", " S. " + page));
+        li.appendChild(createThing("p", "list-element-subject", subject));
+        li.addEventListener("click", () => {
+            fetchBook(bookId).then(b => selectBook(b, page));
+            document.getElementById("suggestions-div").hidden = true;
+        });
+        ul.appendChild(li);
+    }
+
+    function createThing(obj, clazz, text) {
+        const o = document.createElement(obj);
+        o.classList.add(clazz);
+        o.innerHTML = text;
+        return o;
+    }
+
+    document.getElementById("page-selector").addEventListener("input", () => {
+        setPage(parseInt(document.getElementById("page-selector").value), false);
+    });
+
+    // document.getElementById("search").addEventListener("focusout", () => {
+    window.onclick = () => {
+        document.getElementById("suggestions-div").hidden = true;
+    };
+
+    document.getElementById("search").addEventListener("input", () => {
+        doSearch();
+    });
+
+    document.getElementById("search").addEventListener("focusin", () => {
+        doSearch();
+    });
+
+    function fetchBook(id) {
+        return fetch("/api/books/" + id).then(r => r.json().then(j => {
+            return new Book(j["id"], j["title"], j["subject"], j["page-count"]);
+        }));
+    }
+
+    const params = new URL(location.href).searchParams;
+    if (params.has("book")) fetchBook(params.get("book")).then(b => selectBook(b, parseInt(params.get("page"))));
+
+    function doTwoPagesFit() {
+        const f1 = document.getElementById("book1").clientWidth;
+        const f2 = document.getElementById("book2").clientWidth;
+
+        return window.innerWidth > (f1 + f2 + 20);
+    }
+
+    addEventListener("resize", () => updateView(book, currentPage));
+
+    function resizeFrame(frame) {
+        frame.style.width = frame.contentWindow.document.body.scrollWidth + 25 + 'px';
+        if (!doTwoPagesFit()) document.getElementById("book2").hidden = true;
+    }
+</script>
