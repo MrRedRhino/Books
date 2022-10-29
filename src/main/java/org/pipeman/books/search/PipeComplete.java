@@ -50,24 +50,4 @@ public class PipeComplete {
         }
         return out;
     }
-
-    /*
-     for (String s : query.split(" ")) {
-            String q = s.toLowerCase();
-            Map<BookIndex.Book, Integer> qResults = new HashMap<>();
-            for (Map.Entry<Integer, BookIndex.Book> bookEntry : BookIndex.INSTANCE.books().entrySet()) {
-                qResults.put(bookEntry.getValue(), getMinDistance(q, bookEntry.getValue().searchTerms()));
-            }
-
-            int minValue = Integer.MAX_VALUE;
-            BookIndex.Book bestBook = null;
-            for (Map.Entry<BookIndex.Book, Integer> entry : qResults.entrySet()) {
-                if (entry.getValue() < minValue) {
-                    minValue = entry.getValue();
-                    bestBook = entry.getKey();
-                }
-            }
-            out.put(bestBook, minValue);
-        }
-     */
 }
