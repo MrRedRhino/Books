@@ -2,8 +2,9 @@ package org.pipeman.books;
 
 import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
+import org.pipeman.books.backend.BookApi;
 import org.pipeman.books.converter.Converter;
-import org.pipeman.books.search.SearchApi;
+import org.pipeman.books.backend.SearchApi;
 import org.pipeman.pconf.ConfigProvider;
 
 import java.io.IOException;

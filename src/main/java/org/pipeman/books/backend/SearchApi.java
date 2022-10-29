@@ -1,6 +1,7 @@
-package org.pipeman.books.search;
+package org.pipeman.books.backend;
 
 import io.javalin.http.Context;
+import org.pipeman.books.search.SearchParser;
 import org.pipeman.books.utils.Utils;
 import org.pipeman.books.search.SearchParser.CompletionResult;
 

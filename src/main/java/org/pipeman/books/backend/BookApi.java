@@ -1,7 +1,8 @@
-package org.pipeman.books;
+package org.pipeman.books.backend;
 
 import io.javalin.http.Context;
 import io.javalin.http.NotFoundResponse;
+import org.pipeman.books.BookIndex;
 
 import java.io.IOException;
 import java.nio.file.Files;
