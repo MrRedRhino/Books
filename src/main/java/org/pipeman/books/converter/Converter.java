@@ -11,6 +11,7 @@ import org.pipeman.books.utils.TerminalUtil;
 
 import java.io.*;
 
+@SuppressWarnings("ResultOfMethodCallIgnored")
 public class Converter {
     public static void convertBook(int bookId, File pdfFile) throws IOException {
         ResourceHandler handler = new ResourceHandler(bookId);
@@ -93,8 +94,6 @@ public class Converter {
             String imagePath = bookId + "/" + id + ".jpg";
 
             Compression.compress(new ByteArrayInputStream(resource.getData()), "book-data/images/" + imagePath);
-//            File file = new File("book-data/images/" + imagePath);
-//            FileUtils.writeByteArrayToFile(file, resource.getData());
 
             return "/images/books/" + imagePath;
         }
