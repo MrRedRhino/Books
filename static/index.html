@@ -14,6 +14,7 @@
 
         body {
             margin: 0;
+            overflow: hidden;
         }
 
         .top-nav {
@@ -90,6 +91,25 @@
             color: #565656;
             font-size: 16px;
         }
+
+        iframe {
+            border: none;
+            transform-origin: 0 0;
+            box-sizing: border-box;
+        }
+
+        .wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .wrapper iframe {
+            border-style: none;
+            width: 1280px;
+            height: 720px;
+        }
     </style>
 </head>
 <body>
@@ -114,11 +134,8 @@
     <button class="control" style="color: white" onclick="changePage(5)"><strong>>></strong></button>
 </div>
 
-<div id="book-display" style="display: flex; height: 90vh; justify-content: center">
+<div id="book-display" class="wrapper">
     <iframe id="book1">
-
-    </iframe>
-    <iframe id="book2">
 
     </iframe>
 </div>
@@ -166,18 +183,13 @@
 
         const url = "/api/books/" + book.id + "/";
 
-        createNewIFrame("book1", url + page);
-        if (doTwoPagesFit()) createNewIFrame("book2", url + (page + 1));
-    }
-
-    function createNewIFrame(id, src) {
-        const book1 = document.getElementById(id);
+        const book1 = document.getElementById("book1");
         const parent = book1.parentNode;
         parent.removeChild(book1);
 
         const newFrame = document.createElement("iframe");
-        newFrame.src = src;
-        newFrame.id = id;
+        newFrame.src = url + page;
+        newFrame.id = "book1";
         newFrame.onload = () => resizeFrame(newFrame);
         parent.appendChild(newFrame);
     }
@@ -241,17 +253,24 @@
     const params = new URL(location.href).searchParams;
     if (params.has("book")) fetchBook(params.get("book")).then(b => selectBook(b, parseInt(params.get("page"))));
 
-    function doTwoPagesFit() {
-        const f1 = document.getElementById("book1").clientWidth;
-        const f2 = document.getElementById("book2").clientWidth;
-
-        return window.innerWidth > (f1 + f2 + 20);
-    }
-
     addEventListener("resize", () => updateView(book, currentPage));
 
     function resizeFrame(frame) {
+        const fHeight = frame.contentWindow.document.body.scrollHeight;
+        const wHeight = window.outerHeight;
+        const hScale = wHeight / fHeight;
+
+        const fWidth = frame.contentWindow.document.body.scrollWidth;
+        const wWidth = window.outerWidth;
+        const wScale = wWidth / fWidth;
+
+        if (wScale < hScale) {
+            frame.style.scale = (wScale - 0.05) + "";
+        } else {
+            frame.style.scale = (hScale - 0.2) + "";
+        }
+
         frame.style.width = frame.contentWindow.document.body.scrollWidth + 25 + 'px';
-        if (!doTwoPagesFit()) document.getElementById("book2").hidden = true;
+        frame.style.height = frame.contentWindow.document.body.scrollHeight + 25 + 'px';
     }
 </script>
