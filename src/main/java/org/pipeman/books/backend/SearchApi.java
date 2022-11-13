@@ -3,11 +3,8 @@ package org.pipeman.books.backend;
 import io.javalin.http.Context;
 import org.pipeman.books.search.SearchParser;
 import org.pipeman.books.utils.Utils;
-import org.pipeman.books.search.SearchParser.CompletionResult;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class SearchApi {
     private static final SearchParser completer = new SearchParser();
@@ -20,8 +17,8 @@ public class SearchApi {
         }
 
         List<Map<String, ?>> completions = new ArrayList<>();
-        for (CompletionResult completion : completer.getCompletions(Utils.substr(query, 35))) {
-            completions.add(Map.of("page", completion.page(), "book", completion.book().serialize()));
+        for (SearchParser.ICompletionResult completion : completer.getCompletions(Utils.substr(query, 35))) {
+            completions.add(completion.serialize());
         }
         ctx.json(completions);
     }

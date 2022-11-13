@@ -201,20 +201,22 @@
 
             for (let i = 0; i < resp.length; i++) {
                 const s = resp[i];
-                addSearchResult(list, s["book"]["title"], s["book"]["subject"], s["page"], s["book"]["id"]);
+                addSearchResult(list, s); // s["book"]["title"], s["book"]["subject"], s["page"], s["book"]["id"]
             }
             document.getElementById("suggestions-div").hidden = (resp.length === 0);
         }));
     }
 
-    function addSearchResult(ul, title, subject, page, bookId) {
+    function addSearchResult(ul, json) {
         const li = document.createElement("li");
         li.classList.add("list-element");
-        li.appendChild(createThing("a", "list-element-name", title));
-        li.appendChild(createThing("a", "list-element-subject", " S. " + page));
-        li.appendChild(createThing("p", "list-element-subject", subject));
+        li.appendChild(createThing("a", "list-element-name", json["book"]["title"]));
+        li.appendChild(createThing("a", "list-element-subject", " S. " + json["page"]));
+
+        if (json["type"] === "BOOK") li.appendChild(createThing("p", "list-element-subject", json["book"]["subject"]));
+        else li.appendChild(createThing("p", "list-element-subject", json["preview"]["preview"]));
         li.addEventListener("click", () => {
-            fetchBook(bookId).then(b => selectBook(b, page));
+            fetchBook(json["book"]["id"]).then(b => selectBook(b, json["page"]));
             document.getElementById("suggestions-div").hidden = true;
         });
         ul.appendChild(li);

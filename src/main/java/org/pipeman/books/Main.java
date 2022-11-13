@@ -5,6 +5,7 @@ import io.javalin.http.staticfiles.Location;
 import org.pipeman.books.backend.BookApi;
 import org.pipeman.books.converter.Converter;
 import org.pipeman.books.backend.SearchApi;
+import org.pipeman.books.search.text_search.TextSearch;
 import org.pipeman.pconf.ConfigProvider;
 
 import java.io.IOException;
@@ -22,6 +23,8 @@ public class Main {
             Converter.main(args);
             System.exit(0);
         }
+
+        TextSearch.INSTANCE.init();
 
         Javalin app = Javalin.create(c -> {
             c.showJavalinBanner = false;
