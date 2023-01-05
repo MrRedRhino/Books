@@ -3,16 +3,16 @@ package org.pipeman.books;
 import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
 import org.pipeman.books.backend.BookApi;
-import org.pipeman.books.converter.Converter;
+import org.pipeman.books.backend.BookUploadApi;
 import org.pipeman.books.backend.SearchApi;
+import org.pipeman.books.converter.Converter;
 import org.pipeman.pconf.ConfigProvider;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static io.javalin.apibuilder.ApiBuilder.get;
-import static io.javalin.apibuilder.ApiBuilder.path;
+import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class Main {
     public static final ConfigProvider<Config> CFG = ConfigProvider.of("config.properties", Config::new);
@@ -34,6 +34,7 @@ public class Main {
 
         app.routes(() -> {
             get("", ctx -> ctx.html(Files.readString(Path.of("static", "index.html"))));
+            get("upload", ctx -> ctx.html(Files.readString(Path.of("static", "upload.html"))));
 
             path("api", () -> {
                 get("search", SearchApi::handleSearch);
@@ -43,6 +44,8 @@ public class Main {
                     get("{book}", BookApi::getBook);
                     get("{book}/{page}", BookApi::getPage);
                 });
+
+                post("new-book", BookUploadApi::handleUpload);
             });
         });
     }

@@ -195,28 +195,47 @@
     }
 
     function doSearch() {
-        fetch("/api/search?query=" + document.getElementById("search").value).then(r => r.json().then(resp => {
+        let query = document.getElementById("search").value;
+        fetch("/api/search?query=" + query).then(r => r.json().then(resp => {
             const list = document.getElementById("suggestions");
             list.innerHTML = "";
 
+            let hide = true;
             for (let i = 0; i < resp.length; i++) {
                 const s = resp[i];
-                addSearchResult(list, s["book"]["title"], s["book"]["subject"], s["page"], s["book"]["id"]);
+                addSearchResult(list, s["book"]["title"], s["book"]["subject"], s["page"], s["book"]["id"], false);
+                hide = false;
             }
-            document.getElementById("suggestions-div").hidden = (resp.length === 0);
+
+            if (resp.length === 0 && query.length > 0) {
+                addSearchResult(list,
+                    "Nicht gefunden?", "Drücke <span style='font-weight: bold'>hier</span>, um das neue Buch hinzuzufügen.",
+                    0, 0, true
+                );
+                hide = false;
+            }
+
+            document.getElementById("suggestions-div").hidden = hide;
         }));
     }
 
-    function addSearchResult(ul, title, subject, page, bookId) {
+    function addSearchResult(ul, title, subject, page, bookId, isUploadMessage) {
         const li = document.createElement("li");
         li.classList.add("list-element");
         li.appendChild(createThing("a", "list-element-name", title));
-        li.appendChild(createThing("a", "list-element-subject", " S. " + page));
+        if (!isUploadMessage) li.appendChild(createThing("a", "list-element-subject", " S. " + page));
         li.appendChild(createThing("p", "list-element-subject", subject));
-        li.addEventListener("click", () => {
-            fetchBook(bookId).then(b => selectBook(b, page));
-            document.getElementById("suggestions-div").hidden = true;
-        });
+        if (isUploadMessage) {
+            li.addEventListener("click", () => {
+                location.href = "/upload"
+            });
+        } else {
+            li.addEventListener("click", () => {
+                fetchBook(bookId).then(b => selectBook(b, page));
+                document.getElementById("suggestions-div").hidden = true;
+            });
+        }
+
         ul.appendChild(li);
     }
 
