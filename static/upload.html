@@ -40,6 +40,10 @@
         scale: 0.95;
     }
 
+    .button:disabled {
+        background: grey;
+    }
+
     .error {
         color: lawngreen;
         margin: 5px;
@@ -76,8 +80,9 @@
         <br>
         <input id="file" type="file" placeholder="Datei">
         <br>
-        <input class="button" type="button" value="Hochladen" onclick="submit()">
+        <input id="submit" class="button" type="button" value="Hochladen" onclick="submit()">
         <h3 id="error" class="error" hidden=""></h3>
+        <progress id="progress" max="1" hidden="" style="width: 100%"></progress>
     </div>
 </div>
 </body>
@@ -86,8 +91,8 @@
     const title = document.getElementById("title");
     const file = document.getElementById("file");
     const error = document.getElementById("error");
-
-    console.log(file.files[0].size);
+    const submitButton = document.getElementById("submit");
+    const progress = document.getElementById("progress");
 
     function submit() {
         if (title.value.length === 0) showError("Bitte gib den Titel des Buches ein", true);
@@ -95,17 +100,27 @@
         else if (file.files.length === 0) showError("Bitte wähle eine Datei aus", true);
         else if (file.files[0].size > 1_073_741_824) showError("Die Datei darf maximal 1 GB groß sein", true);
         else {
-            showError("Lädt hoch...", false);
+            error.hidden = true;
+            submitButton.disabled = true;
+            progress.hidden = false;
+            progress.value = 0;
 
-            fetch(`/api/new-book?title=${title.value}&subject=${subject.value}`, {
-                method: "POST",
-                body: file.files[0]
+            axios.request({
+                method: "post",
+                url: `/api/new-book?title=${title.value}&subject=${subject.value}`,
+                data: file.files[0],
+                onUploadProgress: (p) => {
+                    progress.max = 1;
+                    progress.value = p.progress;
+                }
             }).then(() => {
                 showError("Fertig! Vielen Dank!", false);
                 subject.value = "";
                 title.value = "";
                 file.value = "";
-            });
+                submitButton.disabled = false;
+                progress.hidden = true;
+            })
         }
     }
 
@@ -115,4 +130,5 @@
         error.innerText = message;
     }
 </script>
+<script src="https://unpkg.com/axios@1.1.2/dist/axios.min.js" async defer></script>
 </html>
