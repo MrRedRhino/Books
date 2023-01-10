@@ -159,6 +159,13 @@
         id;
     }
 
+    document.getElementById("search").addEventListener("keyup", (event) => {
+        if (event.code === "Enter") {
+            event.preventDefault();
+            document.getElementById("suggestions").children.item(0).click();
+        }
+    });
+
     function selectBook(newBook, page = 1) {
         book = newBook;
         currentPage = page;
