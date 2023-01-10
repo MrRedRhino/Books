@@ -14,7 +14,6 @@
 
         body {
             margin: 0;
-            overflow: hidden;
         }
 
         .top-nav {
@@ -97,19 +96,6 @@
             transform-origin: 0 0;
             box-sizing: border-box;
         }
-
-        .wrapper {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
-
-        .wrapper iframe {
-            border-style: none;
-            width: 1280px;
-            height: 720px;
-        }
     </style>
 </head>
 <body>
@@ -134,7 +120,7 @@
     <button class="control" style="color: white" onclick="changePage(5)"><strong>>></strong></button>
 </div>
 
-<div id="book-display" class="wrapper">
+<div id="book-display" style="display: flex; height: 90vh; justify-content: center">
     <iframe id="book1">
 
     </iframe>
@@ -290,11 +276,11 @@
         const wWidth = window.outerWidth;
         const wScale = wWidth / fWidth;
 
-        if (wScale < hScale) {
-            frame.style.scale = (wScale - 0.05) + "";
-        } else {
-            frame.style.scale = (hScale - 0.2) + "";
-        }
+        // if (wScale < hScale) {
+        //     frame.style.scale = (wScale - 0.05) + "";
+        // } else {
+        //     frame.style.scale = (hScale - 0.2) + "";
+        // }
 
         frame.style.width = frame.contentWindow.document.body.scrollWidth + 25 + 'px';
         frame.style.height = frame.contentWindow.document.body.scrollHeight + 25 + 'px';
