@@ -146,10 +146,10 @@
     }
 
     document.getElementById("search").addEventListener("keyup", (event) => {
-        if (event.code === "Enter") {
-            event.preventDefault();
-            document.getElementById("suggestions").children.item(0).click();
-        }
+        if (event.code !== "Enter") return;
+        event.preventDefault();
+        const element = document.getElementById("suggestions").children.item(0);
+        if (!element.classList.contains("no-enter-select")) element.click();
     });
 
     function selectBook(newBook, page = 1) {
@@ -228,6 +228,7 @@
                 document.getElementById("suggestions-div").hidden = true;
             });
         }
+        if (isUploadMessage) li.classList.add("no-enter-select");
 
         ul.appendChild(li);
     }
