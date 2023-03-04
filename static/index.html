@@ -6,6 +6,14 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
     <style>
+        :root {
+            --background-color: #2b2d30;
+            --header-color: #335fb0;
+            --text-color: #b0bac5;
+            --header-background: #222225;
+            --table-line: #b0bac5;
+        }
+
         * {
             box-sizing: border-box;
             font-family: Arial, serif;
@@ -14,15 +22,18 @@
 
         body {
             margin: 0;
+            background: var(--background-color);
+            background-image: url("https://pipeman.org/pipe.svg");
+            background-size: 30px;
         }
 
         .top-nav {
-            background-color: #333;
+            background-color: var(--header-background);
             overflow: hidden;
-        }
-
-        .controls {
-            background-color: #222;
+            width: min(95%, 400px);
+            padding-left: 40px;
+            padding-right: 40px;
+            align-self: center;
         }
 
         .searchbar {
@@ -31,11 +42,20 @@
             width: min(100% - 20px, 400px);
             margin: 10px auto;
             display: block;
+            background: var(--background-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 5px;
         }
 
         .page-selector {
             height: 30px;
-            width: 40px;
+            width: 45px;
+            border: none;
+            background: var(--background-color);
+            color: var(--text-color);
+            border-radius: 6px;
         }
 
         .child {
@@ -50,22 +70,36 @@
             font-size: 20px;
             transform: translateY(3px);
             border: none;
+            background: var(--header-color);
+            color: white;
+            cursor: pointer;
+            border-radius: 6px;
+            padding-right: 10px;
+            padding-left: 10px;
         }
 
         .controls button:hover {
-            background-color: #ddd;
             color: black;
+            background-image: linear-gradient(rgb(0 0 0/20%) 0 0);
         }
 
         .suggestions {
             position: absolute;
             margin: auto;
-            width: min(90%, 400px);
-            padding: 7px;
-            background: lightgray;
+            width: min(95%, 400px);
+            background: var(--header-background);
             left: 50%;
             transform: translateX(-50%);
             z-index: 42;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+
+        .nav-bar-rounded-corners {
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
         }
 
         .list-element {
@@ -74,11 +108,13 @@
         }
 
         .list-element:hover {
-            background: darkgray;
+            background-image: linear-gradient(rgb(0 0 0/20%) 0 0);
         }
 
         .list-element-name {
             font-weight: bold;
+            color: white;
+            padding-left: 10px;
         }
 
         .list-element p {
@@ -87,43 +123,58 @@
         }
 
         .list-element-subject {
-            color: #565656;
+            color: var(--text-color);
             font-size: 16px;
+            padding-left: 10px;
         }
 
-        iframe {
+        #book1 {
             border: none;
-            transform-origin: 0 0;
+            transform-origin: 50% 0;
             box-sizing: border-box;
+            height: fit-content;
+        }
+
+        .top-nav-wrapper {
+            display: flex;
+            width: 100%;
+            flex-direction: column;
+        }
+
+        #max-page {
+            color: var(--text-color);
         }
     </style>
 </head>
 <body>
-<div class="top-nav">
-    <input class="searchbar" id="search" type="text" placeholder="Suche Bücher">
+<div class="top-nav-wrapper">
+    <div class="top-nav nav-bar-rounded-corners" id="top-nav">
+        <input class="searchbar" id="search" type="text" placeholder="Suche Bücher">
+
+        <div class="controls" id="controls" style="text-align: center" hidden>
+            <button onclick="changePage(-5)"><strong><<</strong></button>
+            <button onclick="changePage(-1)"><strong><</strong></button>
+
+            <input class="child page-selector" id="page-selector" type="text" placeholder="Seite">
+            <a id="max-page" class="child">/ 42</a>
+
+            <button onclick="changePage(1)"><strong>></strong></button>
+            <button onclick="changePage(5)"><strong>>></strong></button>
+        </div>
+    </div>
 </div>
 
 <div class="suggestions" id="suggestions-div" hidden>
-    <ul style="list-style: none; padding-left: 5px; margin: 5px 0 0;" id="suggestions">
+    <ul style="list-style: none; padding-left: 0; margin: 5px 0 0;" id="suggestions">
 
     </ul>
 </div>
 
-<div class="controls" id="controls" style="text-align: center" hidden>
-    <button class="control" style="color: white" onclick="changePage(-5)"><strong><<</strong></button>
-    <button class="control" style="color: white" onclick="changePage(-1)"><strong><</strong></button>
-
-    <input class="child page-selector" id="page-selector" type="text" placeholder="Seite">
-    <a id="max-page" class="child" style="color: white">/ 42</a>
-
-    <button class="control" style="color: white" onclick="changePage(1)"><strong>></strong></button>
-    <button class="control" style="color: white" onclick="changePage(5)"><strong>>></strong></button>
-</div>
 
 <div id="book-display" style="display: flex; height: 90vh; justify-content: center">
-    <iframe id="book1">
+    <div id="book1">
 
-    </iframe>
+    </div>
 </div>
 </body>
 </html>
@@ -174,17 +225,11 @@
     function updateView(book, page) {
         window.history.replaceState({}, null, "?book=" + book.id + "&page=" + page);
 
-        const url = "/api/books/" + book.id + "/";
-
-        const book1 = document.getElementById("book1");
-        const parent = book1.parentNode;
-        parent.removeChild(book1);
-
-        const newFrame = document.createElement("iframe");
-        newFrame.src = url + page;
-        newFrame.id = "book1";
-        newFrame.onload = () => resizeFrame(newFrame);
-        parent.appendChild(newFrame);
+        fetch(`/api/books/${book.id}/${page}`).then(r => r.text().then(t => {
+            const book = document.getElementById("book1");
+            book.innerHTML = t
+            resizeFrame(book);
+        }));
     }
 
     function doSearch() {
@@ -209,6 +254,11 @@
             }
 
             document.getElementById("suggestions-div").hidden = hide;
+            if (hide) {
+                hideSuggestions();
+            } else {
+                document.getElementById("top-nav").classList.remove("nav-bar-rounded-corners");
+            }
         }));
     }
 
@@ -225,7 +275,7 @@
         } else {
             li.addEventListener("click", () => {
                 fetchBook(bookId).then(b => selectBook(b, page));
-                document.getElementById("suggestions-div").hidden = true;
+                hideSuggestions();
             });
         }
         if (isUploadMessage) li.classList.add("no-enter-select");
@@ -244,9 +294,14 @@
         setPage(parseInt(document.getElementById("page-selector").value), false);
     });
 
+    function hideSuggestions() {
+        document.getElementById("suggestions-div").hidden = true;
+        document.getElementById("top-nav").classList.add("nav-bar-rounded-corners");
+    }
+
     // document.getElementById("search").addEventListener("focusout", () => {
     window.onclick = () => {
-        document.getElementById("suggestions-div").hidden = true;
+        hideSuggestions();
     };
 
     document.getElementById("search").addEventListener("input", () => {
@@ -266,24 +321,19 @@
     const params = new URL(location.href).searchParams;
     if (params.has("book")) fetchBook(params.get("book")).then(b => selectBook(b, parseInt(params.get("page"))));
 
-    addEventListener("resize", () => updateView(book, currentPage));
+    // addEventListener("resize", () => updateView(book, currentPage));
+    addEventListener("resize", () => resizeFrame(document.getElementById("book1")));
 
-    function resizeFrame(frame) {
-        // const fHeight = frame.contentWindow.document.body.scrollHeight;
-        // const wHeight = window.outerHeight;
-        // const hScale = wHeight / fHeight;
+    function resizeFrame(div) {
+        const divHeight = div.offsetHeight;
+        const windowHeight = window.outerHeight - 90;
+        const verticalScale = windowHeight / divHeight;
 
-        // const fWidth = frame.contentWindow.document.body.scrollWidth;
-        // const wWidth = window.outerWidth;
-        // const wScale = wWidth / fWidth;
+        const divWidth = div.offsetWidth;
+        const windowWidth = window.outerWidth;
+        const horizontalScale = windowWidth / divWidth;
 
-        // if (wScale < hScale) {
-        //     frame.style.scale = (wScale - 0.05) + "";
-        // } else {
-        //     frame.style.scale = (hScale - 0.2) + "";
-        // }
-
-        frame.style.width = frame.contentWindow.document.body.scrollWidth + 25 + 'px';
-        frame.style.height = frame.contentWindow.document.body.scrollHeight + 25 + 'px';
+        const minScale = Math.min(verticalScale, horizontalScale);
+        div.style.scale = (minScale).toString();
     }
 </script>
