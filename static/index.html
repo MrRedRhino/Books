@@ -144,6 +144,12 @@
         #max-page {
             color: var(--text-color);
         }
+
+        #book-display {
+            display: flex;
+            height: calc(100vh - 90px);
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
@@ -171,8 +177,8 @@
 </div>
 
 
-<div id="book-display" style="display: flex; height: 90vh; justify-content: center">
-    <div id="book1">
+<div id="book-display">
+    <div id="book1" class="scaled-content">
 
     </div>
 </div>
@@ -228,7 +234,7 @@
         fetch(`/api/books/${book.id}/${page}`).then(r => r.text().then(t => {
             const book = document.getElementById("book1");
             book.innerHTML = t
-            resizeFrame(book);
+            resizeBook();
         }));
     }
 
@@ -321,19 +327,22 @@
     const params = new URL(location.href).searchParams;
     if (params.has("book")) fetchBook(params.get("book")).then(b => selectBook(b, parseInt(params.get("page"))));
 
-    // addEventListener("resize", () => updateView(book, currentPage));
-    addEventListener("resize", () => resizeFrame(document.getElementById("book1")));
+    addEventListener("resize", () => resizeBook());
 
-    function resizeFrame(div) {
-        const divHeight = div.offsetHeight;
-        const windowHeight = window.outerHeight - 90;
-        const verticalScale = windowHeight / divHeight;
 
-        const divWidth = div.offsetWidth;
-        const windowWidth = window.outerWidth;
-        const horizontalScale = windowWidth / divWidth;
+    function applyScaling(scaledWrapper) {
+        let scaledContent = scaledWrapper.getElementsByClassName('scaled-content')[0];
+        scaledContent.style.transform = 'scale(1, 1)';
 
-        const minScale = Math.min(verticalScale, horizontalScale);
-        div.style.scale = (minScale).toString();
+        let { width: cw, height: ch } = scaledContent.getBoundingClientRect();
+        let { width: ww, height: wh } = scaledWrapper.getBoundingClientRect();
+
+        let scaleAmtX = Math.min(ww / cw, wh / ch);
+
+        scaledContent.style.transform = `scale(${scaleAmtX}, ${scaleAmtX})`;
+    }
+
+    function resizeBook() {
+        applyScaling(document.getElementById("book-display"));
     }
 </script>
