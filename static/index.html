@@ -76,11 +76,15 @@
             border-radius: 6px;
             padding-right: 10px;
             padding-left: 10px;
+            transition-duration: 0.1s;
         }
 
         .controls button:hover {
-            color: black;
             background-image: linear-gradient(rgb(0 0 0/20%) 0 0);
+        }
+
+        .controls button:active {
+            scale: 0.9;
         }
 
         .suggestions {
@@ -209,6 +213,23 @@
         if (!element.classList.contains("no-enter-select")) element.click();
     });
 
+    addEventListener("keydown", (event) => {
+        if (book == null) return;
+
+        switch (event.code) {
+            case "ArrowDown":
+            case "ArrowRight": {
+                changePage(1);
+                break;
+            }
+            case "ArrowUp":
+            case "ArrowLeft": {
+                changePage(-1);
+                break;
+            }
+        }
+    });
+
     function selectBook(newBook, page = 1) {
         book = newBook;
         currentPage = page;
@@ -305,7 +326,6 @@
         document.getElementById("top-nav").classList.add("nav-bar-rounded-corners");
     }
 
-    // document.getElementById("search").addEventListener("focusout", () => {
     window.onclick = () => {
         hideSuggestions();
     };
