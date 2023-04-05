@@ -8,6 +8,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class BookApi {
     public static void getBook(Context ctx) {
@@ -20,7 +23,11 @@ public class BookApi {
     }
 
     public static void listBooks(Context ctx) {
-        ctx.html("Liste mit büchern");
+        List<Map<String, ?>> books = new ArrayList<>();
+        for (BookIndex.Book book : BookIndex.INSTANCE.books().values()) {
+            books.add(book.serialize());
+        }
+        ctx.json(books);
     }
 
     public static void getPage(Context ctx) throws IOException {

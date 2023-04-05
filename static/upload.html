@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lade Bücher hoch!</title>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+</head>
+<style>
+    body {
+        background: #250e52;
+    }
+
+    * {
+        font-family: Arial, serif;
+        color: white;
+    }
+
+    input {
+        border: 10px darkgray;
+        background: lightblue;
+        border-radius: 4px;
+        padding: 4px;
+        margin: 3px;
+        width: 100%;
+        color: black;
+        font-size: 16px;
+    }
+
+    .button {
+        background: #8fff8f;
+        transition-duration: 0.2s;
+    }
+
+    .button:hover {
+        background: #a6ffa6;
+    }
+
+    .button:active {
+        scale: 0.95;
+    }
+
+    .button:disabled {
+        background: grey;
+    }
+
+    .error {
+        color: lawngreen;
+        margin: 5px;
+        font-weight: normal;
+    }
+
+    .main-content-wrapper {
+        max-width: 800px;
+        justify-content: center;
+        align-self: center;
+        margin-top: 200px;
+    }
+
+    .flex {
+        display: flex;
+        flex-direction: column;
+    }
+</style>
+<body>
+<div class="flex">
+    <div class="main-content-wrapper">
+        <h1>Wie lädst du ein Buch hoch?</h1>
+        <ol>
+            <li>Scanne das Buch ein (Am besten mit Adobe Scan) und wandle es in ein PDF um</li>
+            <li>Lade die Datei hier hoch (max. 1 GB) und gib Titel und Fach des Buches ein</li>
+            <li>Fertig!</li>
+        </ol>
+        <h4>Bitte achte auf eine gute Belichtung und dass die Seitenzahl des PDFs mit der jeweiligen Seitenzahl im Buch
+            übereinstimmt</h4>
+
+        <input id="subject" type="text" placeholder="Fach">
+        <br>
+        <input id="title" type="text" placeholder="Buchtitel">
+        <br>
+        <input id="file" type="file" placeholder="Datei">
+        <br>
+        <input id="submit" class="button" type="button" value="Hochladen" onclick="submit()">
+        <h3 id="error" class="error" hidden=""></h3>
+        <progress id="progress" max="1" hidden="" style="width: 100%"></progress>
+    </div>
+</div>
+</body>
+<script>
+    const subject = document.getElementById("subject");
+    const title = document.getElementById("title");
+    const file = document.getElementById("file");
+    const error = document.getElementById("error");
+    const submitButton = document.getElementById("submit");
+    const progress = document.getElementById("progress");
+
+    function submit() {
+        if (title.value.length === 0) showError("Bitte gib den Titel des Buches ein", true);
+        else if (subject.value.length === 0) showError("Bitte gib das Fach des Buches ein", true);
+        else if (file.files.length === 0) showError("Bitte wähle eine Datei aus", true);
+        else if (file.files[0].size > 1_073_741_824) showError("Die Datei darf maximal 1 GB groß sein", true);
+        else {
+            error.hidden = true;
+            submitButton.disabled = true;
+            progress.hidden = false;
+            progress.value = 0;
+
+            axios.request({
+                method: "post",
+                url: `/api/new-book?title=${title.value}&subject=${subject.value}`,
+                data: file.files[0],
+                onUploadProgress: (p) => {
+                    progress.max = 1;
+                    progress.value = p.progress;
+                }
+            }).then(() => {
+                showError("Fertig! Vielen Dank!", false);
+                subject.value = "";
+                title.value = "";
+                file.value = "";
+                submitButton.disabled = false;
+                progress.hidden = true;
+            })
+        }
+    }
+
+    function showError(message, red) {
+        error.style.color = red ? "orangered" : "lawngreen";
+        error.hidden = false;
+        error.innerText = message;
+    }
+</script>
+<script src="https://unpkg.com/axios@1.1.2/dist/axios.min.js" async defer></script>
+</html>
