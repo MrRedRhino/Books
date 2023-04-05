@@ -259,7 +259,7 @@
 
     function doSearch() {
         let query = document.getElementById("search").value;
-        fetch("/api/search?query=" + query).then(r => r.json().then(resp => {
+        fetch("/api/completions?query=" + query).then(r => r.json().then(resp => {
             const list = document.getElementById("suggestions");
             list.innerHTML = "";
 

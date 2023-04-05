@@ -5,9 +5,10 @@ import io.javalin.http.staticfiles.Location;
 import org.pipeman.books.backend.BookApi;
 import org.pipeman.books.backend.BookUploadApi;
 import org.pipeman.books.backend.SearchApi;
-import org.pipeman.books.search.text_search.TextSearch;
 import org.pipeman.books.converter.Converter;
 import org.pipeman.pconf.ConfigProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,13 +18,21 @@ import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class Main {
     public static final ConfigProvider<Config> CFG = ConfigProvider.of("config.properties", Config::new);
-    public static final TextSearch SEARCH = new TextSearch();
+    public static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) throws IOException {
-        if (args.length == 1 && args[0].equals("-add-book")) {
-            Converter.main(args);
-            System.exit(0);
+        boolean textSearch = false;
+        if (args.length == 1) {
+            switch (args[0]) {
+                case "-add-book" -> {
+                    Converter.main(args);
+                    System.exit(0);
+                }
+                case "-enable-text-search" -> textSearch = true;
+                default -> throw new RuntimeException("Unrecognised option " + args[0]);
+            }
         }
+        LOGGER.info("Starting Books!");
 
         Javalin app = Javalin.create(c -> {
             c.showJavalinBanner = false;
@@ -39,7 +48,7 @@ public class Main {
             get("upload", ctx -> ctx.html(Files.readString(Path.of("static", "upload.html"))));
 
             path("api", () -> {
-                get("search", SearchApi::handleSearch);
+                get("completions", SearchApi::completions);
 
                 path("books", () -> {
                     get("", BookApi::listBooks);
@@ -50,5 +59,12 @@ public class Main {
                 post("new-book", BookUploadApi::handleUpload);
             });
         });
+
+        if (textSearch) {
+            LOGGER.info("Starting text search");
+            app.routes(() -> get("api/text-search", SearchApi::search));
+            SearchApi.loadSearchEngine();
+        }
+        LOGGER.info("Books started!");
     }
 }

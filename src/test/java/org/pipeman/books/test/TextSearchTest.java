@@ -9,13 +9,14 @@ import javax.swing.event.CaretEvent;
 import java.util.List;
 
 public class TextSearchTest {
+    static TextSearch SEARCH = new TextSearch();
     static JTextField textField = new JTextField();
     static DefaultListModel<String> list = new DefaultListModel<>();
 
     public static void actionPerformed(CaretEvent event) {
         String query = ((JTextField) event.getSource()).getText();
         long start = System.nanoTime();
-        List<TextSearch.SearchResult> results = Main.SEARCH.search(query, 3, Sorting.LOCATION);
+        List<TextSearch.SearchResult> results = SEARCH.search(query, 3, Sorting.LOCATION);
 
         list.clear();
 
@@ -36,7 +37,7 @@ public class TextSearchTest {
     }
 
     public static void main(String[] args) {
-        new Thread(() -> Main.SEARCH.search("", 3, Sorting.LOCATION)).start();
+        new Thread(() -> SEARCH.search("", 3, Sorting.LOCATION)).start();
         JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 

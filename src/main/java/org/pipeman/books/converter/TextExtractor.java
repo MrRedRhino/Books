@@ -49,6 +49,14 @@ public class TextExtractor {
         return sb.toString();
     }
 
+    public static List<String> getTexts(int bookId) throws IOException {
+        List<String> texts = new ArrayList<>();
+        for (int i = 1; i < BookIndex.INSTANCE.books().get(bookId).pageCount(); i++) {
+            texts.add(getTextOnPage(createJsoup(bookId, i).getElementsByClass("page").get(0).children()));
+        }
+        return texts;
+    }
+
     private static String getTextOnPage(Elements elements) {
         StringBuilder sb = new StringBuilder();
         for (Element element : elements) {

@@ -8,15 +8,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 public class Indexer {
     private static final Pattern SPLIT_PATTERN = Pattern.compile("\\W");
-
-    public static Index indexText(String text) {
-        return createIndex(text.toCharArray());
-    }
 
     /*
     Index format:
@@ -49,6 +48,13 @@ public class Indexer {
                 os.write(ByteUtils.intToBytes(wo.i()));
             }
         }
+
+        os.write(ByteUtils.intToBytes(index.pagePositions().size()));
+        for (Utils.Range position : index.pagePositions()) {
+            os.write(ByteUtils.intToBytes(position.lower()));
+            os.write(ByteUtils.intToBytes(position.upper()));
+        }
+
         os.close();
     }
 
@@ -72,38 +78,56 @@ public class Indexer {
             }
             index.put(key, wos);
         }
+
+        int len = ByteUtils.bytesToInt(is.readNBytes(4));
+        List<Utils.Range> pagePositions = new ArrayList<>(len);
+        for (int i = 0; i < len; i++) {
+            pagePositions.add(new Utils.Range(
+                    ByteUtils.bytesToInt(is.readNBytes(4)),
+                    ByteUtils.bytesToInt(is.readNBytes(4)))
+            );
+        }
+
         is.close();
-        return new Index(index, words);
+        return new Index(index, words, pagePositions);
     }
 
-    private static Index createIndex(char[] data) {
+    public static Index createIndex(List<String> pages) {
+        final List<Utils.Range> pagePositions = new ArrayList<>();
         final List<String> words = new ArrayList<>();
         final Map<String, List<Index.WordOccurrence>> index = new HashMap<>();
 
-        StringBuilder wordBuilder = new StringBuilder();
-        for (int i = 0; i < data.length; i++) {
-            if (SPLIT_PATTERN.matcher(String.valueOf(data[i])).matches()) {
-                if (wordBuilder.isEmpty()) continue;
-                String word = wordBuilder.toString();
+        int posInBook = 0;
+        for (String page : pages) {
+            int start = posInBook;
+            char[] data = page.toCharArray();
+            StringBuilder wordBuilder = new StringBuilder();
+            for (int i = 0; i < data.length; i++) {
+                if (SPLIT_PATTERN.matcher(String.valueOf(data[i])).matches()) {
+                    if (wordBuilder.isEmpty()) continue;
+                    String word = wordBuilder.toString();
 
-                if (!word.isBlank() && word.length() > 1) {
-                    words.add(word);
+                    if (!word.isBlank() && word.length() > 1) {
+                        words.add(word);
 
-                    int pos = i - word.length();
-                    int nextWordPos = iterateToNextWord(data, i);
-                    i = nextWordPos - 1;
+                        int pos = i - word.length();
+                        int nextWordPos = iterateToNextWord(data, i);
+                        i = nextWordPos - 1;
 
-                    List<Index.WordOccurrence> list = index.get(word);
-                    Index.WordOccurrence o = new Index.WordOccurrence(pos, words.size() - 1);
-                    if (list == null) index.put(word, new ArrayList<>(List.of(o)));
-                    else list.add(o);
-                }
+                        List<Index.WordOccurrence> list = index.get(word);
+                        Index.WordOccurrence o = new Index.WordOccurrence(pos, words.size() - 1);
+                        if (list == null) index.put(word, new ArrayList<>(List.of(o)));
+                        else list.add(o);
+                        posInBook += word.length();
+                    }
 
-                wordBuilder = new StringBuilder();
-            } else wordBuilder.append(data[i]);
+                    wordBuilder = new StringBuilder();
+                } else wordBuilder.append(data[i]);
+            }
+            pagePositions.add(new Utils.Range(start, posInBook));
         }
 
-        return new Index(index, Utils.toArray(words));
+        return new Index(index, Utils.toArray(words), pagePositions);
     }
 
     private static int iterateToNextWord(char[] data, int start) {

@@ -32,10 +32,10 @@ public class SearchParser {
         return new SplitResult(numbers, curString.toString().strip());
     }
 
-    public List<ICompletionResult> getCompletions(String query) {
+    public List<CompletionResult> getCompletions(String query) {
         if (query.isBlank()) return List.of();
         SplitResult splitResult = splitQuery(query);
-        List<ICompletionResult> out = new ArrayList<>();
+        List<CompletionResult> out = new ArrayList<>();
 
         for (BookIndex.Book book : completer.getCompletionsSorted(splitResult.rest())) {
             List<Integer> numbers = splitResult.numbers();
@@ -56,14 +56,9 @@ public class SearchParser {
     private record SplitResult(List<Integer> numbers, String rest) {
     }
 
-    public record CompletionResult(BookIndex.Book book, int page) implements ICompletionResult {
-        @Override
+    public record CompletionResult(BookIndex.Book book, int page) {
         public Map<String, ?> serialize() {
             return Map.of("page", page, "book", book.serialize());
         }
-    }
-
-    public interface ICompletionResult {
-        Map<String, ?> serialize();
     }
 }

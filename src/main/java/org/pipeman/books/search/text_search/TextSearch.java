@@ -4,21 +4,22 @@ import info.debatty.java.stringsimilarity.Damerau;
 import org.jetbrains.annotations.NotNull;
 import org.pipeman.books.BookIndex;
 import org.pipeman.books.converter.TextExtractor;
-import org.pipeman.books.search.SearchParser;
 import org.pipeman.books.search.text_search.index.Index;
 import org.pipeman.books.search.text_search.index.Index.WordOccurrence;
 import org.pipeman.books.search.text_search.index.Indexer;
 import org.pipeman.books.utils.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
 public class TextSearch {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TextSearch.class);
     private static final Damerau spellchecker = new Damerau();
     private static final float THRESHOLD = 2.5f;
     private final Map<Integer, Index> indexes = new HashMap<>();
-    private final Map<Integer, List<Utils.Range>> pagePositions = new HashMap<>();
 
     public TextSearch() {
         String indexPath = "indexes/";
@@ -32,7 +33,7 @@ public class TextSearch {
                 throw new RuntimeException(ex);
             }
         }
-        System.out.println("Prepared indexes in " + (System.nanoTime() - start) / 1_000_000 + "ms");
+        LOGGER.info("Prepared indexes in " + (System.nanoTime() - start) / 1_000_000 + "ms");
     }
 
     private void loadIndex(int bookId, int pageCount, String indexPath) throws IOException {
@@ -40,14 +41,13 @@ public class TextSearch {
         Index index;
         try {
             index = Indexer.readIndex(file);
-            System.out.println("Read index file " + file);
+            LOGGER.info("Read index file " + file);
         } catch (Exception ex) {
-            System.out.println("Failed to read index file: " + ex.getMessage() + ". Creating it...");
-            index = Indexer.indexText(TextExtractor.getText(bookId));
+            LOGGER.info("Failed to read index file: " + ex.getMessage() + ". Creating it...");
+            index = Indexer.createIndex(TextExtractor.getTexts(bookId));
             Indexer.writeIndex(index, file);
         }
         indexes.put(bookId, index);
-        pagePositions.put(bookId, TextExtractor.getPagePositions(bookId, pageCount));
     }
 
     private int distance(String s1, String s2) {
@@ -67,8 +67,9 @@ public class TextSearch {
 
         List<SearchResult> out = new ArrayList<>(matches.size());
         for (Result result : matches) {
-            int page = Utils.binarySearch(pagePositions.get(bookId), result.pos);
-            Utils.Range range = pagePositions.get(bookId).get(page);
+            List<Utils.Range> pagePositions = index.pagePositions();
+            int page = Utils.binarySearch(pagePositions, result.pos);
+            Utils.Range range = pagePositions.get(page);
             int offset = result.pos - range.lower();
 
             Utils.Pair<String, Highlight> preview = createPreview(result.i, index, result.length);
@@ -115,7 +116,7 @@ public class TextSearch {
         for (String w : words) {
             final int d = distance(w, word);
             if (d < THRESHOLD)
-                for (WordOccurrence wo : idx.getPositions(w)) out.add(new Result(wo.i(), d, wo.position(), w.length()));
+                for (WordOccurrence wo : idx.getPositions(w)) out.add(new Result(wo.i(), wo.position(), d, w.length()));
         }
         return out;
     }
@@ -128,8 +129,7 @@ public class TextSearch {
     }
 
     public record SearchResult(int page, Highlight previewHighlight, String preview,
-                               Highlight pageHighlight) implements SearchParser.ICompletionResult, Comparable<SearchResult> {
-        @Override
+                               Highlight pageHighlight) implements Comparable<SearchResult> {
         public Map<String, ?> serialize() {
             return Map.of(
                     "page", page,

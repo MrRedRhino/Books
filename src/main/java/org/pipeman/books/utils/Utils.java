@@ -3,6 +3,7 @@ package org.pipeman.books.utils;
 import org.json.JSONArray;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 public class Utils {
     public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
@@ -51,6 +52,14 @@ public class Utils {
         }
     }
 
+    public static Optional<Integer> parseInt(String s) {
+        try {
+            return Optional.of(Integer.parseInt(s));
+        } catch (NumberFormatException ignored) {
+            return Optional.empty();
+        }
+    }
+
     public static int binarySearch(List<Range> ranges, int pos) {
         int low = 0;
         int high = ranges.size() - 1;
@@ -64,6 +73,10 @@ public class Utils {
             else low = mid + 1;
         }
         return -1;
+    }
+
+    public static String enabled(boolean b) {
+        return b ? "enabled" : "disabled";
     }
 
     @FunctionalInterface

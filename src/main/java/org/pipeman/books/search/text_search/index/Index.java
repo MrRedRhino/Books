@@ -1,15 +1,17 @@
 package org.pipeman.books.search.text_search.index;
 
+import org.pipeman.books.utils.Utils;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public record Index(Map<String, List<WordOccurrence>> wos, String[] words) {
+public record Index(Map<String, List<WordOccurrence>> wos, String[] words, List<Utils.Range> pagePositions) {
     public Set<String> getWords() {
         return wos.keySet();
     }
 
-    public List<Index.WordOccurrence> getPositions(String word) {
+    public List<WordOccurrence> getPositions(String word) {
         return wos.get(word);
     }
 
