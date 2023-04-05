@@ -1,5 +1,7 @@
 package org.pipeman.books.test;
 
+import org.pipeman.books.Main;
+import org.pipeman.books.search.text_search.Sorting;
 import org.pipeman.books.search.text_search.TextSearch;
 
 import javax.swing.*;
@@ -13,26 +15,28 @@ public class TextSearchTest {
     public static void actionPerformed(CaretEvent event) {
         String query = ((JTextField) event.getSource()).getText();
         long start = System.nanoTime();
-        List<TextSearch.SearchResult> results = TextSearch.INSTANCE.search(query);
+        List<TextSearch.SearchResult> results = Main.SEARCH.search(query, 3, Sorting.LOCATION);
 
         list.clear();
 
         System.out.println("Search took: " + (System.nanoTime() - start) / 1_000_000 + "ms");
-        for (TextSearch.SearchResult wo : results) addElement(wo);
+        for (TextSearch.SearchResult result : results) addElement(result);
     }
 
     private static void addElement(TextSearch.SearchResult r) {
         StringBuilder out = new StringBuilder();
-        TextSearch.Highlight ph = r.previewHighlight();
-        out.append(r.preview(), 0, ph.start()).append("**");
-        out.append(r.preview(), ph.start(), ph.start() + ph.length()).append("**");
-        out.append(r.preview(), ph.start() + ph.length(), r.preview().length());
+        TextSearch.Highlight highlight = r.previewHighlight();
+        int start = highlight.start();
+        out.append(r.preview(), 0, start).append("**");
+        int end = Math.min(r.preview().length(), start + highlight.length());
+        out.append(r.preview(), start, end).append("**");
+        out.append(r.preview(), end, r.preview().length());
 
         list.addElement(out.toString());
     }
 
     public static void main(String[] args) {
-        TextSearch.INSTANCE.init();
+        new Thread(() -> Main.SEARCH.search("", 3, Sorting.LOCATION)).start();
         JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 

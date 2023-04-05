@@ -17,14 +17,13 @@ import static io.javalin.apibuilder.ApiBuilder.path;
 
 public class Main {
     public static final ConfigProvider<Config> CFG = ConfigProvider.of("config.properties", Config::new);
+    public static final TextSearch SEARCH = new TextSearch();
 
     public static void main(String[] args) throws IOException {
         if (args.length == 1 && args[0].equals("-add-book")) {
             Converter.main(args);
             System.exit(0);
         }
-
-        TextSearch.INSTANCE.init();
 
         Javalin app = Javalin.create(c -> {
             c.showJavalinBanner = false;

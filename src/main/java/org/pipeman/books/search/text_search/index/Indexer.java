@@ -46,7 +46,6 @@ public class Indexer {
 
             for (Index.WordOccurrence wo : wos) {
                 os.write(ByteUtils.intToBytes(wo.position()));
-                os.write(ByteUtils.stringToBytes(wo.nextWord()));
                 os.write(ByteUtils.intToBytes(wo.i()));
             }
         }
@@ -68,7 +67,6 @@ public class Indexer {
             for (int j = 0; j < woCount; j++) {
                 wos.add(new Index.WordOccurrence(
                         ByteUtils.bytesToInt(is.readNBytes(4)),
-                        ByteUtils.readString(is),
                         ByteUtils.bytesToInt(is.readNBytes(4)))
                 );
             }
@@ -96,7 +94,7 @@ public class Indexer {
                     i = nextWordPos - 1;
 
                     List<Index.WordOccurrence> list = index.get(word);
-                    Index.WordOccurrence o = new Index.WordOccurrence(pos, getNextWord(data, nextWordPos), words.size() - 1);
+                    Index.WordOccurrence o = new Index.WordOccurrence(pos, words.size() - 1);
                     if (list == null) index.put(word, new ArrayList<>(List.of(o)));
                     else list.add(o);
                 }
@@ -116,18 +114,5 @@ public class Indexer {
             c = data[start];
         }
         return start;
-    }
-
-    private static String getNextWord(char[] data, int position) {
-        if (position >= data.length) return "";
-        StringBuilder out = new StringBuilder();
-        char c = data[position];
-        while (!SPLIT_PATTERN.matcher(String.valueOf(c)).matches()) {
-            if (++position >= data.length) return out.toString();
-            out.append(c);
-            c = data[position];
-        }
-
-        return out.toString();
     }
 }

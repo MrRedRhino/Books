@@ -21,6 +21,6 @@ public record Index(Map<String, List<WordOccurrence>> wos, String[] words) {
         return words.length;
     }
 
-    public record WordOccurrence(int position, String nextWord, int i) {
+    public record WordOccurrence(int position, int i) {
     }
 }

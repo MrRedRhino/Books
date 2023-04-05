@@ -1,7 +1,6 @@
 package org.pipeman.books.search;
 
 import org.pipeman.books.BookIndex;
-import org.pipeman.books.search.text_search.TextSearch;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,7 +10,7 @@ import java.util.Map;
 public class SearchParser {
     private final PipeComplete completer = new PipeComplete();
 
-    private SplitResult tidyUpQuery(String query) {
+    private SplitResult splitQuery(String query) {
         List<Integer> numbers = new ArrayList<>();
         StringBuilder curNumber = new StringBuilder();
         StringBuilder curString = new StringBuilder();
@@ -35,7 +34,7 @@ public class SearchParser {
 
     public List<ICompletionResult> getCompletions(String query) {
         if (query.isBlank()) return List.of();
-        SplitResult splitResult = tidyUpQuery(query);
+        SplitResult splitResult = splitQuery(query);
         List<ICompletionResult> out = new ArrayList<>();
 
         for (BookIndex.Book book : completer.getCompletionsSorted(splitResult.rest())) {
@@ -43,7 +42,6 @@ public class SearchParser {
             if (numbers.size() == 0) out.add(new CompletionResult(book, 1));
             else for (Integer number : numbers) out.add(new CompletionResult(book, number));
         }
-        out.addAll(TextSearch.INSTANCE.search(query));
 
         return out;
     }
@@ -61,7 +59,7 @@ public class SearchParser {
     public record CompletionResult(BookIndex.Book book, int page) implements ICompletionResult {
         @Override
         public Map<String, ?> serialize() {
-            return Map.of("type", "BOOK", "page", page, "book", book.serialize());
+            return Map.of("page", page, "book", book.serialize());
         }
     }
 
