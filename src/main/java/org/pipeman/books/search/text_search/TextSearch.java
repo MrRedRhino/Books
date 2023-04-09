@@ -8,12 +8,15 @@ import org.pipeman.books.search.text_search.index.Index;
 import org.pipeman.books.search.text_search.index.Index.WordOccurrence;
 import org.pipeman.books.search.text_search.index.Indexer;
 import org.pipeman.books.utils.Utils;
+import org.pipeman.books.utils.Utils.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
 
 public class TextSearch {
     private static final Logger LOGGER = LoggerFactory.getLogger(TextSearch.class);
@@ -23,20 +26,28 @@ public class TextSearch {
 
     public TextSearch() {
         String indexPath = "indexes/";
+        //noinspection ResultOfMethodCallIgnored
         new File(indexPath).mkdirs();
 
-        long start = System.nanoTime();
-        for (Map.Entry<Integer, BookIndex.Book> e : BookIndex.INSTANCE.books().entrySet()) {
-            try {
-                loadIndex(e.getKey(), e.getValue().pageCount(), indexPath);
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
+        List<Callable<Void>> tasks = new ArrayList<>();
+        for (int id : BookIndex.INSTANCE.books().keySet()) {
+            tasks.add(() -> {
+                loadIndex(id, indexPath);
+                return null;
+            });
         }
-        LOGGER.info("Prepared indexes in " + (System.nanoTime() - start) / 1_000_000 + "ms");
+
+        try {
+            long start = System.nanoTime();
+            Executors.newWorkStealingPool().invokeAll(tasks);
+            System.gc();
+            LOGGER.info("Prepared indexes in " + (System.nanoTime() - start) / 1_000_000 + "ms");
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    private void loadIndex(int bookId, int pageCount, String indexPath) throws IOException {
+    private void loadIndex(int bookId, String indexPath) throws IOException {
         String file = indexPath + "book" + bookId + ".idx";
         Index index;
         try {
@@ -72,15 +83,15 @@ public class TextSearch {
             Utils.Range range = pagePositions.get(page);
             int offset = result.pos - range.lower();
 
-            Utils.Pair<String, Highlight> preview = createPreview(result.i, index, result.length);
-            out.add(new SearchResult(page, preview.v2(), preview.v1(), new Highlight(offset, result.length)));
+            Pair<String, Highlight> preview = createPreview(result.i, index, result.length);
+            out.add(new SearchResult(page, preview, new Highlight(offset, result.length)));
         }
 
         if (sorting == Sorting.LOCATION) Collections.sort(out);
         return out;
     }
 
-    private Utils.Pair<String, Highlight> createPreview(int i, Index idx, int queryLength) {
+    private Pair<String, Highlight> createPreview(int i, Index idx, int queryLength) {
         final int wordCount = idx.getWordCount();
         StringBuilder out = new StringBuilder();
         if (i - 2 >= 0) out.append(idx.getWord(i - 2)).append(' ');
@@ -90,7 +101,7 @@ public class TextSearch {
         if (i + 1 < wordCount) out.append(idx.getWord(i + 1)).append(' ');
         if (i + 2 < wordCount) out.append(idx.getWord(i + 2));
 
-        return new Utils.Pair<>(out.toString(), new Highlight(start, queryLength));
+        return new Pair<>(out.toString(), new Highlight(start, queryLength));
     }
 
     private List<Result> getOccurrences(List<Result> source, String[] query, int indexInQuery, Index idx) {
@@ -128,15 +139,16 @@ public class TextSearch {
         }
     }
 
-    public record SearchResult(int page, Highlight previewHighlight, String preview,
+    public record SearchResult(int page, Pair<String, Highlight> preview,
                                Highlight pageHighlight) implements Comparable<SearchResult> {
         public Map<String, ?> serialize() {
+            final Highlight highlight = preview().v2();
             return Map.of(
                     "page", page,
                     "preview", Map.of(
-                            "preview", preview,
-                            "start", previewHighlight.start,
-                            "length", previewHighlight.length
+                            "preview", preview.v1(),
+                            "start", highlight.start,
+                            "length", highlight.length
                     ),
                     "highlight", Map.of(
                             "start", pageHighlight.start,

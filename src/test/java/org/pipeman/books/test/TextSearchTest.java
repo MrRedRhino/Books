@@ -1,6 +1,5 @@
 package org.pipeman.books.test;
 
-import org.pipeman.books.Main;
 import org.pipeman.books.search.text_search.Sorting;
 import org.pipeman.books.search.text_search.TextSearch;
 
@@ -26,12 +25,12 @@ public class TextSearchTest {
 
     private static void addElement(TextSearch.SearchResult r) {
         StringBuilder out = new StringBuilder();
-        TextSearch.Highlight highlight = r.previewHighlight();
+        TextSearch.Highlight highlight = r.preview().v2();
         int start = highlight.start();
-        out.append(r.preview(), 0, start).append("**");
-        int end = Math.min(r.preview().length(), start + highlight.length());
-        out.append(r.preview(), start, end).append("**");
-        out.append(r.preview(), end, r.preview().length());
+        out.append(r.preview().v1(), 0, start).append("**");
+        int end = Math.min(r.preview().v1().length(), start + highlight.length());
+        out.append(r.preview().v1(), start, end).append("**");
+        out.append(r.preview().v1(), end, r.preview().v1().length());
 
         list.addElement(out.toString());
     }

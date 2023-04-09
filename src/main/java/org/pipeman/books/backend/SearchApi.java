@@ -45,11 +45,8 @@ public class SearchApi {
         List<SearchResult> searchResults = SearchEngineProvider.getEngine().search(query, book.get(), Sorting.LOCATION);
         List<SearchResult> outputResults;
         if (page.isPresent()) {
-            List<SearchResult> filteredResults = new ArrayList<>();
-            for (SearchResult result : searchResults) {
-                if (result.page() == page.get()) filteredResults.add(result);
-            }
-            outputResults = filteredResults;
+            searchResults.removeIf(result -> result.page() != page.get());
+            outputResults = searchResults;
         } else if (index.isPresent()) {
             outputResults = getResultsWithIndex(searchResults, index.get());
         } else {
@@ -63,13 +60,16 @@ public class SearchApi {
     }
 
     public static void loadSearchEngine() {
+        //noinspection ResultOfMethodCallIgnored
         SearchEngineProvider.getEngine();
     }
 
     private static Map<String, ?> constructSearchResult(int totalResults, List<SearchResult> results) {
+        List<Map<String, ?>> serialized = new ArrayList<>();
+        for (SearchResult completion : results) serialized.add(completion.serialize());
         return Map.of(
                 "total-results", totalResults,
-                "results", results
+                "results", serialized
         );
     }
 

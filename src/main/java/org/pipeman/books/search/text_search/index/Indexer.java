@@ -100,30 +100,30 @@ public class Indexer {
         int posInBook = 0;
         for (String page : pages) {
             int start = posInBook;
-            char[] data = page.toCharArray();
             StringBuilder wordBuilder = new StringBuilder();
-            for (int i = 0; i < data.length; i++) {
-                if (SPLIT_PATTERN.matcher(String.valueOf(data[i])).matches()) {
+            char[] chars = page.toCharArray();
+            for (int i = 0; i < chars.length; i++) {
+                if (SPLIT_PATTERN.matcher(String.valueOf(chars[i])).matches()) {
                     if (wordBuilder.isEmpty()) continue;
                     String word = wordBuilder.toString();
 
                     if (!word.isBlank() && word.length() > 1) {
                         words.add(word);
 
-                        int pos = i - word.length();
-                        int nextWordPos = iterateToNextWord(data, i);
+                        int pos = start + i - word.length();
+                        int nextWordPos = iterateToNextWord(chars, i);
                         i = nextWordPos - 1;
 
                         List<Index.WordOccurrence> list = index.get(word);
                         Index.WordOccurrence o = new Index.WordOccurrence(pos, words.size() - 1);
                         if (list == null) index.put(word, new ArrayList<>(List.of(o)));
                         else list.add(o);
-                        posInBook += word.length();
                     }
 
                     wordBuilder = new StringBuilder();
-                } else wordBuilder.append(data[i]);
+                } else wordBuilder.append(chars[i]);
             }
+            posInBook += chars.length;
             pagePositions.add(new Utils.Range(start, posInBook));
         }
 
