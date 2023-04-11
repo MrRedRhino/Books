@@ -84,7 +84,7 @@ public class TextSearch {
             int offset = result.pos - range.lower();
 
             Pair<String, Highlight> preview = createPreview(result.i, index, result.length);
-            out.add(new SearchResult(page, preview, new Highlight(offset, result.length)));
+            out.add(new SearchResult(page + 1, preview, new Highlight(offset, result.length)));
         }
 
         if (sorting == Sorting.LOCATION) Collections.sort(out);

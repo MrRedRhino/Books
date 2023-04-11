@@ -40,19 +40,29 @@ public class SearchApi {
         }
 
         Optional<Integer> page = Utils.parseInt(ctx.queryParam("page"));
+        Optional<Integer> afterPage = Utils.parseInt(ctx.queryParam("after-page"));
         Optional<Integer> index = Utils.parseInt(ctx.queryParam("index"));
 
+
         List<SearchResult> searchResults = SearchEngineProvider.getEngine().search(query, book.get(), Sorting.LOCATION);
-        List<SearchResult> outputResults;
+        if (afterPage.isPresent()) page = Optional.of(getNextPage(afterPage.get(), searchResults));
         if (page.isPresent()) {
-            searchResults.removeIf(result -> result.page() != page.get());
-            outputResults = searchResults;
+            int minIndex = -1;
+            List<SearchResult> output = new ArrayList<>();
+            for (int i = 0; i < searchResults.size(); i++) {
+                SearchResult result = searchResults.get(i);
+                if (result.page() == page.get()) {
+                    output.add(result);
+                    if (minIndex == -1) minIndex = i;
+                }
+            }
+            ctx.json(constructSearchResult(searchResults.size(), output, minIndex));
         } else if (index.isPresent()) {
-            outputResults = getResultsWithIndex(searchResults, index.get());
+            List<SearchResult> withIndex = getResultsWithIndex(searchResults, index.get());
+            ctx.json(constructSearchResult(searchResults.size(), withIndex));
         } else {
-            outputResults = List.of();
+            ctx.json(constructSearchResult(searchResults.size(), List.of()));
         }
-        ctx.json(constructSearchResult(searchResults.size(), outputResults));
     }
 
     private static List<SearchResult> getResultsWithIndex(List<SearchResult> results, int idx) {
@@ -64,13 +74,30 @@ public class SearchApi {
         SearchEngineProvider.getEngine();
     }
 
+    private static int getNextPage(int page, List<SearchResult> results) {
+        for (SearchResult result : results) {
+            if (result.page() > page) return result.page();
+        }
+        return 1;
+    }
+
     private static Map<String, ?> constructSearchResult(int totalResults, List<SearchResult> results) {
+        return constructSearchResult(totalResults, results, -1);
+    }
+
+    private static Map<String, ?> constructSearchResult(int totalResults, List<SearchResult> results, int index) {
         List<Map<String, ?>> serialized = new ArrayList<>();
         for (SearchResult completion : results) serialized.add(completion.serialize());
-        return Map.of(
-                "total-results", totalResults,
-                "results", serialized
-        );
+        return index == -1 ?
+                Map.of(
+                        "total-results", totalResults,
+                        "results", serialized
+                ) :
+                Map.of(
+                        "total-results", totalResults,
+                        "results", serialized,
+                        "start-index", index
+                );
     }
 
     private static class SearchEngineProvider {
