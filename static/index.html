@@ -46,7 +46,7 @@
             border: none;
             border-radius: 6px;
             padding: 5px;
-            margin: 10px auto 1px;
+            margin: 10px auto 5px;
         }
 
         .page-selector {
@@ -167,7 +167,7 @@
             margin: 5px 0 0;
         }
 
-        .controls {
+        .controls:not([hidden]) {
             text-align: center;
             display: flex;
             flex-direction: row;
@@ -278,7 +278,11 @@
     });
 
     addEventListener("keydown", (event) => {
-        if (book == null) return;
+        if (book == null
+            || document.getElementById("search") === document.activeElement
+            || document.getElementById("page-selector") === document.activeElement
+            || document.getElementById("text-search-input") === document.activeElement
+        ) return;
 
         switch (event.code) {
             case "ArrowRight": {
@@ -302,6 +306,7 @@
 
     function changePage(lambda) {
         setPage(currentPage + lambda);
+        searchOnCurrentPage();
     }
 
     function setPage(page, updateInputField = true, after = null) {
@@ -381,6 +386,7 @@
 
     document.getElementById("page-selector").addEventListener("input", () => {
         setPage(parseInt(document.getElementById("page-selector").value), false);
+        searchOnCurrentPage();
     });
 
     function hideSuggestions() {
