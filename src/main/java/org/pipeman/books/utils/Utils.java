@@ -3,7 +3,6 @@ package org.pipeman.books.utils;
 import org.json.JSONArray;
 
 import java.util.*;
-import java.util.function.Predicate;
 
 public class Utils {
     public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
@@ -58,6 +57,15 @@ public class Utils {
         } catch (NumberFormatException ignored) {
             return Optional.empty();
         }
+    }
+
+    public static  <T extends Enum<T>> Optional<T> getEnum(String s, Class<T> enumClass) {
+        for(T constant : enumClass.getEnumConstants()) {
+            if (constant.name().equalsIgnoreCase(s)) {
+                return Optional.of(constant);
+            }
+        }
+        return Optional.empty();
     }
 
     public static int binarySearch(List<Range> ranges, int pos) {

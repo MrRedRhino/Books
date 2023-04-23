@@ -40,13 +40,16 @@ public class SearchApi {
         }
 
         Optional<Integer> page = Utils.parseInt(ctx.queryParam("page"));
-        Optional<Integer> afterPage = Utils.parseInt(ctx.queryParam("after-page"));
         Optional<Integer> index = Utils.parseInt(ctx.queryParam("index"));
-
+        Optional<Location> location = Utils.getEnum(ctx.queryParam("location"), Location.class);
 
         List<SearchResult> searchResults = SearchEngineProvider.getEngine().search(query, book.get(), Sorting.LOCATION);
-        if (afterPage.isPresent()) page = Optional.of(getNextPage(afterPage.get(), searchResults));
         if (page.isPresent()) {
+            switch (location.orElse(Location.EXACT)) {
+                case BEFORE -> page = Optional.of(getPreviousPage(page.get(), searchResults));
+                case AFTER -> page = Optional.of(getNextPage(page.get(), searchResults));
+            }
+
             int minIndex = -1;
             List<SearchResult> output = new ArrayList<>();
             for (int i = 0; i < searchResults.size(); i++) {
@@ -81,6 +84,15 @@ public class SearchApi {
         return 1;
     }
 
+    private static int getPreviousPage(int page, List<SearchResult> results) {
+        int previous = 1;
+        for (SearchResult result : results) {
+            if (result.page() >= page) break;
+            previous = result.page();
+        }
+        return previous;
+    }
+
     private static Map<String, ?> constructSearchResult(int totalResults, List<SearchResult> results) {
         return constructSearchResult(totalResults, results, -1);
     }
@@ -106,5 +118,11 @@ public class SearchApi {
         public static TextSearch getEngine() {
             return ENGINE;
         }
+    }
+
+    public enum Location {
+        BEFORE,
+        EXACT,
+        AFTER
     }
 }
