@@ -31,22 +31,22 @@
             background-color: var(--header-background);
             overflow: hidden;
             width: min(95%, 400px);
-            padding-left: 40px;
-            padding-right: 40px;
+            padding-left: 20px;
+            padding-right: 20px;
             align-self: center;
         }
 
         .searchbar {
             vertical-align: center;
             height: 30px;
-            width: min(100% - 20px, 400px);
-            margin: 10px auto;
+            width: min(100% - 10px, 400px);
             display: block;
             background: var(--background-color);
             color: white;
             border: none;
             border-radius: 6px;
             padding: 5px;
+            margin: 10px auto 1px;
         }
 
         .page-selector {
@@ -65,10 +65,9 @@
             vertical-align: middle;
         }
 
-        .controls button {
+        button {
             background: #000000;
             font-size: 20px;
-            transform: translateY(3px);
             border: none;
             background: var(--header-color);
             color: white;
@@ -77,13 +76,16 @@
             padding-right: 10px;
             padding-left: 10px;
             transition-duration: 0.1s;
+            height: 26px;
+            margin-left: 3px;
+            margin-right: 3px;
         }
 
-        .controls button:hover {
+        button:hover {
             background-image: linear-gradient(rgb(0 0 0/20%) 0 0);
         }
 
-        .controls button:active {
+        button:active {
             scale: 0.9;
         }
 
@@ -154,6 +156,54 @@
             height: calc(100vh - 90px);
             justify-content: center;
         }
+
+        .highlight {
+            background: rgba(255, 255, 0, 0.7);
+        }
+
+        #suggestions {
+            list-style: none;
+            padding-left: 0;
+            margin: 5px 0 0;
+        }
+
+        .controls {
+            text-align: center;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .text-search:not([hidden]) {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            padding: 5px;
+            gap: 5px;
+            z-index: 13;
+        }
+
+        .text-search .searchbar {
+            margin-top: 0;
+        }
+
+        .text-search h5, .text-search span {
+            color: var(--text-color);
+            font-weight: normal;
+            font-size: 15px;
+            white-space: nowrap;
+            margin: 0;
+        }
+
+        .svg-button {
+            padding: 1px;
+            background: none;
+        }
+
+        .svg-button svg {
+            color: var(--text-color);
+        }
     </style>
 </head>
 <body>
@@ -161,7 +211,7 @@
     <div class="top-nav nav-bar-rounded-corners" id="top-nav">
         <input class="searchbar" id="search" type="text" placeholder="Suche Bücher">
 
-        <div class="controls" id="controls" style="text-align: center" hidden>
+        <div class="controls" id="controls" hidden>
             <button onclick="changePage(-5)"><strong><<</strong></button>
             <button onclick="changePage(-1)"><strong><</strong></button>
 
@@ -170,14 +220,28 @@
 
             <button onclick="changePage(1)"><strong>></strong></button>
             <button onclick="changePage(5)"><strong>>></strong></button>
+            <button class="svg-button" style="width: 26px; height: 26px" onclick="toggleTextSearch()">
+                <svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse style="stroke: currentColor; fill: none; stroke-linecap: round; stroke-width: 30px;"
+                             cx="179.236" cy="178.236" rx="152.435" ry="152.435"/>
+                    <path style="stroke: currentColor; fill: none; stroke-width: 20px; stroke-linecap: round;"
+                          d="M 289.792 285.495 L 479.829 477.669"/>
+                </svg>
+            </button>
         </div>
     </div>
 </div>
 
 <div class="suggestions" id="suggestions-div" hidden>
-    <ul style="list-style: none; padding-left: 0; margin: 5px 0 0;" id="suggestions">
+    <ul id="suggestions">
 
     </ul>
+</div>
+<div class="suggestions text-search" id="text-search-div" hidden="">
+    <input placeholder="Im Buch suchen" class="searchbar" id="text-search-input" oninput="searchOnCurrentPage()">
+    <h5><span id="result-count">0</span> Ergebnisse</h5>
+    <button onclick="searchOnPreviousPage()"><strong><</strong></button>
+    <button onclick="searchOnNextPage()"><strong>></strong></button>
 </div>
 
 
@@ -240,21 +304,21 @@
         setPage(currentPage + lambda);
     }
 
-    function setPage(page, updateInputField = true) {
+    function setPage(page, updateInputField = true, after = null) {
         if (isNaN(page)) page = 1;
         currentPage = Math.max(1, Math.min(book.pageCount, page));
         if (updateInputField) document.getElementById("page-selector").value = currentPage;
-        updateView(book, currentPage);
-    }
+        window.history.replaceState({}, null, "?book=" + book.id + "&page=" + currentPage);
 
-    function updateView(book, page) {
-        window.history.replaceState({}, null, "?book=" + book.id + "&page=" + page);
-
-        fetch(`/api/books/${book.id}/${page}`).then(r => r.text().then(t => {
+        const promise = fetch(`/api/books/${book.id}/${currentPage}`).then(r => r.text().then(t => {
             const book = document.getElementById("book1");
             book.innerHTML = t
             resizeBook();
         }));
+
+        if (after !== null) {
+            promise.then(after);
+        }
     }
 
     function doSearch() {
@@ -282,7 +346,7 @@
             if (hide) {
                 hideSuggestions();
             } else {
-                document.getElementById("top-nav").classList.remove("nav-bar-rounded-corners");
+                updateRoundedCorners();
             }
         }));
     }
@@ -321,7 +385,15 @@
 
     function hideSuggestions() {
         document.getElementById("suggestions-div").hidden = true;
-        document.getElementById("top-nav").classList.add("nav-bar-rounded-corners");
+        updateRoundedCorners();
+    }
+
+    function updateRoundedCorners() {
+        if (!document.getElementById("suggestions-div").hidden || !document.getElementById("text-search-div").hidden) {
+            document.getElementById("top-nav").classList.remove("nav-bar-rounded-corners");
+        } else {
+            document.getElementById("top-nav").classList.add("nav-bar-rounded-corners");
+        }
     }
 
     window.onclick = () => {
@@ -347,20 +419,92 @@
 
     addEventListener("resize", () => resizeBook());
 
-
     function applyScaling(scaledWrapper) {
-        let scaledContent = scaledWrapper.getElementsByClassName('scaled-content')[0];
+        const scaledContent = scaledWrapper.getElementsByClassName('scaled-content')[0];
         scaledContent.style.transform = 'scale(1, 1)';
 
-        let { width: cw, height: ch } = scaledContent.getBoundingClientRect();
-        let { width: ww, height: wh } = scaledWrapper.getBoundingClientRect();
+        const {width: cw, height: ch} = scaledContent.getBoundingClientRect();
+        const {width: ww, height: wh} = scaledWrapper.getBoundingClientRect();
 
-        let scaleAmtX = Math.min(ww / cw, wh / ch);
+        const scaleAmount = Math.min(ww / cw, wh / ch);
 
-        scaledContent.style.transform = `scale(${scaleAmtX}, ${scaleAmtX})`;
+        scaledContent.style.transform = `scale(${scaleAmount}, ${scaleAmount})`;
     }
 
     function resizeBook() {
         applyScaling(document.getElementById("book-display"));
+    }
+
+    function textSearch(url, changePage = false) {
+        unhighlight();
+        if (getQuery().length === 0) return;
+
+        fetch(url).then(r => r.json().then(json => {
+            const results = json["results"];
+            if (changePage && results.length > 0) {
+                setPage(results[0]["page"], true, () => {
+                    highlightAll(results);
+                    updateResultCount(json["total-results"]);
+                });
+            } else {
+                highlightAll(results);
+                updateResultCount(json["total-results"]);
+            }
+        }));
+    }
+
+    function updateResultCount(count) {
+        document.getElementById("result-count").innerText = count;
+    }
+
+    function highlightAll(results) {
+        for (let result of results) {
+            let start = result["highlight"]["start"];
+            highlight(start, start + result["highlight"]["length"]);
+        }
+    }
+
+    function getQuery() {
+        return document.getElementById("text-search-input").value;
+    }
+
+    function searchOnCurrentPage() {
+        textSearch(`/api/text-search?query=${getQuery()}&book=${book.id}&page=${currentPage}`);
+    }
+
+    function searchOnNextPage() {
+        textSearch(`/api/text-search?query=${getQuery()}&book=${book.id}&page=${currentPage}&location=after`, true);
+    }
+
+    function searchOnPreviousPage() {
+        textSearch(`/api/text-search?query=${getQuery()}&book=${book.id}&page=${currentPage}&location=before`, true)
+    }
+
+    function highlight(start, end) {
+        let curPos = 0;
+        for (let element of document.getElementsByClassName("page")[0].children) {
+            if (curPos <= end && curPos >= start) {
+                highlightElement(element);
+            }
+            curPos += element.innerHTML.length + 1;
+        }
+    }
+
+    function highlightElement(element) {
+        const newNode = element.cloneNode(true);
+        element.parentNode.append(newNode)
+        newNode.classList.add("highlight");
+    }
+
+    function unhighlight() {
+        const elements = document.getElementsByClassName("highlight");
+        for (let i = elements.length - 1; i >= 0; i--) {
+            elements[i].remove();
+        }
+    }
+
+    function toggleTextSearch() {
+        const element = document.getElementById("text-search-div");
+        element.hidden = !element.hidden;
     }
 </script>
