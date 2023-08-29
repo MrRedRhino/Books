@@ -1,5 +1,6 @@
 package org.pipeman.books.utils;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 
 import java.util.*;
@@ -14,10 +15,10 @@ public class Utils {
 
         return result;
     }
-        // https://stackoverflow.com/questions/49900588/edit-distance-java
-        // alternative: https://github.com/raelgc/java-spell-checker/
-        // https://stackoverflow.com/questions/24968697/how-to-implement-auto-suggest-using-lucenes-new-analyzinginfixsuggester-api
-        // https://www.baeldung.com/lucene
+    // https://stackoverflow.com/questions/49900588/edit-distance-java
+    // alternative: https://github.com/raelgc/java-spell-checker/
+    // https://stackoverflow.com/questions/24968697/how-to-implement-auto-suggest-using-lucenes-new-analyzinginfixsuggester-api
+    // https://www.baeldung.com/lucene
 
     public static String substr(String in, int end) {
         return in.substring(0, Math.min(in.length(), end));
@@ -43,9 +44,17 @@ public class Utils {
         return input.subList(0, Math.min(input.size(), len));
     }
 
-    public static <T> T tryThis(Producer<T> action) {
+    public static <T> T tryThis(ExceptionSupplier<T> action) {
         try {
-            return action.run();
+            return action.get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void tryThis(ExceptionRunnable action) {
+        try {
+            action.run();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -59,8 +68,8 @@ public class Utils {
         }
     }
 
-    public static  <T extends Enum<T>> Optional<T> getEnum(String s, Class<T> enumClass) {
-        for(T constant : enumClass.getEnumConstants()) {
+    public static <T extends Enum<T>> Optional<T> getEnum(String s, Class<T> enumClass) {
+        for (T constant : enumClass.getEnumConstants()) {
             if (constant.name().equalsIgnoreCase(s)) {
                 return Optional.of(constant);
             }
@@ -83,16 +92,17 @@ public class Utils {
         return -1;
     }
 
-    public static String enabled(boolean b) {
-        return b ? "enabled" : "disabled";
+    @FunctionalInterface
+    public interface ExceptionSupplier<T> {
+        T get() throws Exception;
     }
 
     @FunctionalInterface
-    public interface Producer<T> {
-        T run() throws Exception;
+    public interface ExceptionRunnable {
+        void run() throws Exception;
     }
 
-    public record Range(int lower, int upper) {
+    public record Range(int lower, int upper) implements Iterable<Integer> {
 
         public static Range of(int i1, int i2) {
             return new Range(Math.min(i1, i2), Math.max(i1, i2));
@@ -100,6 +110,24 @@ public class Utils {
 
         public boolean isInRange(int i) {
             return i >= lower && i <= upper;
+        }
+
+        @NotNull
+        @Override
+        public Iterator<Integer> iterator() {
+            return new Iterator<>() {
+                private int i = 0;
+
+                @Override
+                public boolean hasNext() {
+                    return lower + i <= upper;
+                }
+
+                @Override
+                public Integer next() {
+                    return i++ + lower;
+                }
+            };
         }
     }
 
