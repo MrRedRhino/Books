@@ -1,0 +1,198 @@
+:root {
+    --background-color: #2b2d30;
+    --header-color: #335fb0;
+    --text-color: #b0bac5;
+    --header-background: #222225;
+    --table-line: #b0bac5;
+}
+
+* {
+    box-sizing: border-box;
+    font-family: Arial, serif;
+    font-size: 18px;
+}
+
+body {
+    margin: 0;
+    background: var(--background-color);
+    background-image: url("https://pipeman.org/pipe.svg");
+    background-size: 30px;
+}
+
+.top-nav {
+    background-color: var(--header-background);
+    overflow: hidden;
+    width: min(95%, 400px);
+    padding-left: 20px;
+    padding-right: 20px;
+    align-self: center;
+}
+
+.searchbar {
+    vertical-align: center;
+    height: 30px;
+    width: min(100% - 10px, 400px);
+    display: block;
+    background: var(--background-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 5px;
+    margin: 10px auto 5px;
+}
+
+.page-selector {
+    height: 30px;
+    width: 45px;
+    border: none;
+    background: var(--background-color);
+    color: var(--text-color);
+    border-radius: 6px;
+}
+
+.child {
+    margin-top: 5px;
+    margin-bottom: 5px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+button {
+    background: #000000;
+    font-size: 20px;
+    border: none;
+    background: var(--header-color);
+    color: white;
+    cursor: pointer;
+    border-radius: 6px;
+    padding-right: 10px;
+    padding-left: 10px;
+    transition-duration: 0.1s;
+    height: 26px;
+    margin-left: 3px;
+    margin-right: 3px;
+}
+
+button:hover {
+    background-image: linear-gradient(rgb(0 0 0/20%) 0 0);
+}
+
+button:active {
+    scale: 0.9;
+}
+
+.suggestions {
+    position: absolute;
+    margin: auto;
+    width: min(95%, 400px);
+    background: var(--header-background);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 42;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.nav-bar-rounded-corners {
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+}
+
+.list-element {
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+
+.list-element:hover {
+    background-image: linear-gradient(rgb(0 0 0/20%) 0 0);
+}
+
+.list-element-name {
+    font-weight: bold;
+    color: white;
+    padding-left: 10px;
+}
+
+.list-element p {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.list-element-subject {
+    color: var(--text-color);
+    font-size: 16px;
+    padding-left: 10px;
+}
+
+#book1 {
+    border: none;
+    transform-origin: 50% 0;
+    box-sizing: border-box;
+    height: fit-content;
+}
+
+.top-nav-wrapper {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+}
+
+#max-page {
+    color: var(--text-color);
+}
+
+#book-display {
+    display: flex;
+    height: calc(100vh - 90px);
+    justify-content: center;
+}
+
+.highlight {
+    background: rgba(255, 255, 0, 0.7);
+}
+
+#suggestions {
+    list-style: none;
+    padding-left: 0;
+    margin: 5px 0 0;
+}
+
+.controls:not([hidden]) {
+    text-align: center;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.text-search:not([hidden]) {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 5px;
+    gap: 5px;
+    z-index: 13;
+}
+
+.text-search .searchbar {
+    margin-top: 0;
+}
+
+.text-search h5, .text-search span {
+    color: var(--text-color);
+    font-weight: normal;
+    font-size: 15px;
+    white-space: nowrap;
+    margin: 0;
+}
+
+.svg-button {
+    padding: 1px;
+    background: none;
+}
+
+.svg-button svg {
+    color: var(--text-color);
+}
