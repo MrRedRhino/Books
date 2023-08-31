@@ -3,6 +3,7 @@ package org.pipeman.books;
 import org.json.JSONObject;
 import org.pipeman.books.utils.Utils;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -17,6 +18,14 @@ public class BookIndex {
         for (String key : booksObj.keySet()) {
             int id = Integer.parseInt(key);
             books.put(id, Book.fromJSON(id, booksObj.getJSONObject(key)));
+        }
+    }
+
+    public String getHtml(int bookId, int page) {
+        try {
+            return Files.readString(Path.of("book-data", "html", String.valueOf(bookId), page + ".html"));
+        } catch (IOException e) {
+            return "";
         }
     }
 
