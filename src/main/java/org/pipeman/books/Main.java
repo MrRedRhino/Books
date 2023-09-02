@@ -41,6 +41,8 @@ public class Main {
                 cfg.directory = "book-data/images/";
                 cfg.hostedPath = "/images/books";
             });
+
+            c.staticFiles.add("static", Location.EXTERNAL);
         }).start(CFG.c().port);
 
         app.routes(() -> {
@@ -54,7 +56,13 @@ public class Main {
                     get("", BookApi::listBooks);
                     get("{book}", BookApi::getBook);
                     get("{book}/{page}", BookApi::getPage);
+                    get("{book}/{page}/summary", BookApi::getSummary);
                 });
+
+                // Falls Dir die KI-Features gefallen, würde ich mich über eine Spende (hier) sehr freuen, da diese
+                // Features verhältnismäßig teuer im Unterhalt sind.
+
+                get("ask-ai", BookApi::askAi);
 
                 post("new-book", BookUploadApi::handleUpload);
             });

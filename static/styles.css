@@ -81,7 +81,7 @@ button:active {
     scale: 0.9;
 }
 
-.suggestions {
+.centered {
     position: absolute;
     margin: auto;
     width: min(95%, 400px);
@@ -195,4 +195,19 @@ button:active {
 
 .svg-button svg {
     color: var(--text-color);
+}
+
+.extra-functions {
+    z-index: 13;
+    align-items: center;
+}
+
+.extra-functions button {
+    height: 27px;
+    font-size: 15px;
+    font-weight: normal;
+    margin: 3px;
+    width: 50%;
+    align-self: center;
+    /*padding: 0px;*/
 }

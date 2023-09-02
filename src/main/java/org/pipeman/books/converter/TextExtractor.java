@@ -6,22 +6,25 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.pipeman.books.BookIndex;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TextExtractor {
-    public static Document createJsoup(int bookId, int page) throws IOException {
-        return Jsoup.parse(new File("book-data/html/" + bookId + "/" + page + ".html"));
+    public static Document createJsoup(int bookId, int page) {
+        return Jsoup.parse(BookIndex.INSTANCE.getHtml(bookId, page));
     }
 
-    public static List<String> getTexts(int bookId) throws IOException {
+    public static List<String> getTexts(int bookId) {
         List<String> texts = new ArrayList<>();
-        for (int i = 1; i < BookIndex.INSTANCE.books().get(bookId).pageCount(); i++) {
-            texts.add(getTextOnPage(createJsoup(bookId, i).getElementsByClass("page").get(0).children()));
+        int pageCount = BookIndex.INSTANCE.books().get(bookId).pageCount();
+        for (int i = 1; i < pageCount; i++) {
+            texts.add(getText(bookId, i));
         }
         return texts;
+    }
+
+    public static String getText(int bookId, int page) {
+        return getTextOnPage(createJsoup(bookId, page).getElementsByClass("page").get(0).children());
     }
 
     private static String getTextOnPage(Elements elements) {

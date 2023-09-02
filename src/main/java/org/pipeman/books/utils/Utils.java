@@ -131,6 +131,10 @@ public class Utils {
         }
     }
 
+    public static int getDay() {
+        return (int) (System.currentTimeMillis() / 86_400_000);
+    }
+
     public record Pair<T, T1>(T v1, T1 v2) {
     }
 }
