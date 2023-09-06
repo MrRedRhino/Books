@@ -190,7 +190,10 @@ button:active {
 
 .svg-button {
     padding: 1px;
-    background: none;
+    background: var(--header-color);
+    width: 45px;
+    height: 26px;
+    color: white;
 }
 
 .svg-button svg {
@@ -199,7 +202,8 @@ button:active {
 
 .extra-functions {
     z-index: 13;
-    align-items: center;
+    align-items: stretch;
+    display: flex;
 }
 
 .extra-functions button {
@@ -207,7 +211,57 @@ button:active {
     font-size: 15px;
     font-weight: normal;
     margin: 3px;
-    width: 50%;
-    align-self: center;
-    /*padding: 0px;*/
+    padding: 0;
+    flex: 1;
+}
+
+.extra-functions[hidden] {
+    display: none;
+}
+
+.summary-wrapper {
+    position: absolute;
+    top: 100px;
+    max-width: 800px;
+    width: min(800px, calc(100% - 10px));
+    height: calc(100% - 200px);
+    margin: auto;
+    background: var(--header-background);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 69;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.summary-wrapper .header {
+    flex-direction: row;
+    display: flex;
+}
+
+.summary-wrapper h1 {
+    color: var(--text-color);
+    font-size: 30px;
+    margin: 0 0 10px 10px;
+}
+
+.summary {
+    background: black;
+    color: var(--text-color);
+    padding: 3px;
+    border-radius: 10px;
+    height: calc(100% - 48px);
+}
+
+.summary h3 {
+    margin: 5px;
+}
+
+.summary-wrapper button {
+    right: 0;
+    position: fixed;
+    margin-right: 10px;
+    margin-top: 3px;
+    background: none;
+    color: var(--text-color);
 }
