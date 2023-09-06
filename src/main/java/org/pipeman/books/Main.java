@@ -17,10 +17,10 @@ import java.nio.file.Path;
 import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class Main {
-    public static final ConfigProvider<Config> CFG = ConfigProvider.of("config.properties", Config::new);
+    private static final ConfigProvider<Config> CONFIG = ConfigProvider.of("config.properties", Config::new);
     public static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         boolean textSearch = false;
         if (args.length == 1) {
             switch (args[0]) {
@@ -43,7 +43,7 @@ public class Main {
             });
 
             c.staticFiles.add("static", Location.EXTERNAL);
-        }).start(CFG.c().port);
+        }).start(config().port);
 
         app.routes(() -> {
             get("", ctx -> ctx.html(Files.readString(Path.of("static", "index.html"))));
@@ -74,5 +74,9 @@ public class Main {
             SearchApi.loadSearchEngine();
         }
         LOGGER.info("Books started!");
+    }
+
+    public static Config config() {
+        return CONFIG.c();
     }
 }
