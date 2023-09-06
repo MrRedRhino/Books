@@ -1,5 +1,6 @@
 package org.pipeman.books.ai.impl;
 
+import io.javalin.http.ContentType;
 import io.javalin.http.Header;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -15,6 +16,9 @@ public class OpenAI {
     private static final HttpClient CLIENT = HttpClient.newHttpClient();
 
     public static String getCompletion(String input, String token) {
+        input = input.replaceAll("(?<= )[A-z\\\\](?= )", "")
+                .replaceAll("[@©ı]", "");
+
         JSONObject body = new JSONObject()
                 .put("model", "gpt-3.5-turbo")
                 .put("temperature", 0.7)
@@ -25,7 +29,8 @@ public class OpenAI {
 
         HttpRequest request = HttpRequest.newBuilder(API_URL)
                 .header(Header.AUTHORIZATION, "Bearer " + token)
-                .method("GET", HttpRequest.BodyPublishers.ofString(body.toString()))
+                .header(Header.CONTENT_TYPE, ContentType.JSON)
+                .POST(HttpRequest.BodyPublishers.ofString(body.toString()))
                 .build();
 
         HttpResponse<String> response = Utils.tryThis(() -> CLIENT.send(request, HttpResponse.BodyHandlers.ofString()));
