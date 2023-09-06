@@ -3,8 +3,10 @@ package org.pipeman.books.backend;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.http.NotFoundResponse;
+import io.javalin.http.TooManyRequestsResponse;
 import org.pipeman.books.BookIndex;
 import org.pipeman.books.ai.AI;
+import org.pipeman.books.ai.UsageLimit;
 import org.pipeman.books.utils.Utils.Range;
 
 import java.util.ArrayList;
@@ -41,7 +43,11 @@ public class BookApi {
         int book = ctx.pathParamAsClass("book", Integer.class).get();
         int page = ctx.pathParamAsClass("page", Integer.class).get();
 
-        ctx.result(AI.getSummary(book, page));
+        try {
+            ctx.result(AI.getSummary(book, page));
+        } catch (UsageLimit.LimitExceededException ignored) {
+            throw new TooManyRequestsResponse("The daily usage limit has been exceeded");
+        }
     }
 
     public static void askAi(Context ctx) {
@@ -60,6 +66,10 @@ public class BookApi {
             throw new BadRequestResponse("Body too long");
         }
 
-        ctx.result(AI.getAnswer(question.trim(), book, range));
+        try {
+            ctx.result(AI.getAnswer(question.trim(), book, range));
+        } catch (UsageLimit.LimitExceededException ignored) {
+            throw new TooManyRequestsResponse("The daily usage limit has been exceeded");
+        }
     }
 }

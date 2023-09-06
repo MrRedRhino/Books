@@ -2,6 +2,7 @@ package org.pipeman.books;
 
 import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
+import org.pipeman.books.ai.UsageLimit;
 import org.pipeman.books.backend.BookApi;
 import org.pipeman.books.backend.BookUploadApi;
 import org.pipeman.books.backend.SearchApi;
@@ -18,6 +19,7 @@ import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class Main {
     private static final ConfigProvider<Config> CONFIG = ConfigProvider.of("config.properties", Config::new);
+    private static final UsageLimit usageLimiter = new UsageLimit();
     public static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -78,5 +80,9 @@ public class Main {
 
     public static Config config() {
         return CONFIG.c();
+    }
+
+    public static UsageLimit getUsageLimiter() {
+        return usageLimiter;
     }
 }

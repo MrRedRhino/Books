@@ -1,5 +1,6 @@
 package org.pipeman.books.ai;
 
+import org.pipeman.books.Main;
 import org.pipeman.books.utils.Utils;
 
 import java.io.File;
@@ -8,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class UsageLimit {
-    public static final int LIMIT = 233_333;
     private static int reserved = 0;
     private static int lastReset;
     private static int usage;
@@ -28,11 +28,27 @@ public class UsageLimit {
     }
 
     public void use(int amount) {
+        if (amount == 0) return;
+
+        int currentDay = Utils.getDay();
+        if (lastReset < currentDay) {
+            lastReset = currentDay;
+            usage = 0;
+        }
         usage += amount;
+        save();
+    }
+
+    private void save() {
+        try {
+            Files.writeString(Path.of("usage.txt"), lastReset + " " + usage);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void reserve(int amount) {
-        if (reserved + usage >= LIMIT) {
+        if (reserved + usage >= Main.config().dailyUsageLimit) {
             throw new LimitExceededException();
         }
         reserved += amount;
