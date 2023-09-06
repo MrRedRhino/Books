@@ -78,10 +78,12 @@ function doSearch() {
         list.innerHTML = "";
 
         let hide = true;
+        let addToHistory = false;
         for (let i = 0; i < resp.length; i++) {
             const s = resp[i];
             addSearchResult(list, s["book"]["title"], s["book"]["subject"], s["page"], s["book"]["id"], false);
             hide = false;
+            addToHistory = true;
         }
 
         if (resp.length === 0 && query.length > 0) {
@@ -98,6 +100,10 @@ function doSearch() {
         } else {
             updateRoundedCorners();
         }
+
+        if (addToHistory) {
+            // TODO add query to search history
+        }
     }));
 }
 
@@ -113,7 +119,13 @@ function addSearchResult(ul, title, subject, page, bookId, isUploadMessage) {
         });
     } else {
         li.addEventListener("click", () => {
-            fetchBook(bookId).then(b => selectBook(b, page));
+            fetchBook(bookId).then(b => {
+                if (book !== null && book.id !== b.id) {
+                    history.pushState(null, "", window.location);
+                    history.go(history.length);
+                }
+                selectBook(b, page);
+            });
             hideSuggestions();
         });
     }
@@ -165,8 +177,12 @@ function fetchBook(id) {
     }));
 }
 
-const params = new URL(location.href).searchParams;
-if (params.has("book")) fetchBook(params.get("book")).then(b => selectBook(b, parseInt(params.get("page"))));
+function loadBookFromUrl() {
+    const params = new URL(location.href).searchParams;
+    if (params.has("book")) fetchBook(params.get("book")).then(b => selectBook(b, parseInt(params.get("page"))));
+}
+
+loadBookFromUrl();
 
 addEventListener("resize", () => resizeBook());
 
@@ -258,3 +274,22 @@ function toggleTextSearch() {
     const element = document.getElementById("text-search-div");
     element.hidden = !element.hidden;
 }
+
+function showSummary() {
+    document.getElementById("summary-popup").hidden = false;
+    const summaryElement = document.getElementById("summary");
+    summaryElement.innerText = "Eine Sekunde...";
+
+    fetch(`/api/books/${book.id}/${currentPage}/summary`).then(r => r.text().then(text => {
+        summaryElement.innerText = text;
+    }));
+}
+
+function closeSummary() {
+    document.getElementById("summary-popup").hidden = true;
+}
+
+window.addEventListener('popstate', () => {
+    // history.back();
+    loadBookFromUrl();
+}, false);
