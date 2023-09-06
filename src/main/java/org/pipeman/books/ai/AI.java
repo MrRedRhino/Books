@@ -3,23 +3,18 @@ package org.pipeman.books.ai;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.Options;
 import org.iq80.leveldb.impl.Iq80DBFactory;
+import org.pipeman.books.Main;
 import org.pipeman.books.ai.impl.OpenAIAnswerer;
 import org.pipeman.books.ai.impl.OpenAISummarizer;
-import org.pipeman.books.ai.impl.RandomImpl;
 import org.pipeman.books.converter.TextExtractor;
-import org.pipeman.books.utils.ByteUtils;
 import org.pipeman.books.utils.Utils;
 import org.pipeman.books.utils.Utils.Range;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 
 public class AI {
-    private static final String openAIKey = "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";
-
-    private static final Summarizer SUMMARIZER = RandomImpl.summarizer;
-    private static final Answerer ANSWERER = new OpenAIAnswerer(openAIKey);
+    private static final Summarizer SUMMARIZER = new OpenAISummarizer(Main.config().aiKey);
+    private static final Answerer ANSWERER = new OpenAIAnswerer(Main.config().aiKey);
 
     private static final DB summaries;
 
