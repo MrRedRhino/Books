@@ -1,5 +1,6 @@
 let currentPage;
 let book = null;
+const searchHistory = JSON.parse(localStorage.getItem("search-history") ?? "[]");
 
 class Book {
     constructor(id, title, subject, pageCount) {
@@ -71,19 +72,43 @@ function setPage(page, updateInputField = true, after = null) {
     }
 }
 
+document.getElementById("search").onfocus = () => {
+    doSearch();
+};
+
+document.getElementById("search").addEventListener("focusout", () => {
+    hideSuggestions();
+});
+
 function doSearch() {
-    let query = document.getElementById("search").value;
+    const list = document.getElementById("suggestions");
+    const query = document.getElementById("search").value;
+
+    if (query.trim().length === 0 && searchHistory.length > 0) {
+        list.innerHTML = "";
+        searchHistory.forEach(element => {
+            const li = createThing("li", "list-element", "");
+            const a = createThing("a", "list-element-name", element.name + " S. " + element.page);
+            li.onmousedown = () => {
+                openBook(element.id, element.page, false);
+            }
+            li.appendChild(a);
+            list.appendChild(li);
+        });
+        document.getElementById("suggestions-div").hidden = false;
+        updateRoundedCorners();
+
+        return;
+    }
+
     fetch("/api/completions?query=" + query).then(r => r.json().then(resp => {
-        const list = document.getElementById("suggestions");
         list.innerHTML = "";
 
         let hide = true;
-        let addToHistory = false;
         for (let i = 0; i < resp.length; i++) {
             const s = resp[i];
             addSearchResult(list, s["book"]["title"], s["book"]["subject"], s["page"], s["book"]["id"], false);
             hide = false;
-            addToHistory = true;
         }
 
         if (resp.length === 0 && query.length > 0) {
@@ -100,10 +125,6 @@ function doSearch() {
         } else {
             updateRoundedCorners();
         }
-
-        if (addToHistory) {
-            // TODO add query to search history
-        }
     }));
 }
 
@@ -119,19 +140,36 @@ function addSearchResult(ul, title, subject, page, bookId, isUploadMessage) {
         });
     } else {
         li.addEventListener("click", () => {
-            fetchBook(bookId).then(b => {
-                if (book !== null && book.id !== b.id) {
-                    history.pushState(null, "", window.location);
-                    history.go(history.length);
-                }
-                selectBook(b, page);
-            });
+            openBook(bookId, page, true);
             hideSuggestions();
         });
     }
     if (isUploadMessage) li.classList.add("no-enter-select");
 
     ul.appendChild(li);
+}
+
+function openBook(bookId, page, addToSearchHistory) {
+    fetchBook(bookId).then(b => {
+        if (book !== null && book.id !== b.id) {
+            history.pushState(null, "", window.location);
+            history.go(history.length);
+        }
+        selectBook(b, page);
+
+        if (!addToSearchHistory) return;
+
+        searchHistory.unshift({
+            page: page,
+            name: b.title,
+            id: b.id
+        });
+
+        while (searchHistory.length > 5) {
+            searchHistory.pop();
+        }
+        localStorage.setItem("search-history", JSON.stringify(searchHistory));
+    });
 }
 
 function createThing(obj, clazz, text) {
@@ -158,10 +196,6 @@ function updateRoundedCorners() {
         document.getElementById("top-nav").classList.add("nav-bar-rounded-corners");
     }
 }
-
-window.onclick = () => {
-    hideSuggestions();
-};
 
 document.getElementById("search").addEventListener("input", () => {
     doSearch();
@@ -290,6 +324,5 @@ function closeSummary() {
 }
 
 window.addEventListener('popstate', () => {
-    // history.back();
     loadBookFromUrl();
 }, false);
