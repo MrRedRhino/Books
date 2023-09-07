@@ -307,6 +307,7 @@ function unhighlight() {
 function toggleTextSearch() {
     const element = document.getElementById("text-search-div");
     element.hidden = !element.hidden;
+    updateRoundedCorners();
 }
 
 function showSummary() {
