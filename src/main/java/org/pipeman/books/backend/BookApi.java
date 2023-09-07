@@ -46,7 +46,7 @@ public class BookApi {
         try {
             ctx.result(AI.getSummary(book, page));
         } catch (UsageLimit.LimitExceededException ignored) {
-            throw new TooManyRequestsResponse("The daily usage limit has been exceeded");
+            throw ulr();
         }
     }
 
@@ -69,7 +69,11 @@ public class BookApi {
         try {
             ctx.result(AI.getAnswer(question.trim(), book, range));
         } catch (UsageLimit.LimitExceededException ignored) {
-            throw new TooManyRequestsResponse("The daily usage limit has been exceeded");
+            throw ulr();
         }
+    }
+
+    private static TooManyRequestsResponse ulr() {
+        return new TooManyRequestsResponse("Sorry, the daily usage limit has been exceeded");
     }
 }
