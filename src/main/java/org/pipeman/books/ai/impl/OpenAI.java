@@ -39,7 +39,7 @@ public class OpenAI {
                 .build();
 
         try {
-            Main.getUsageLimiter().reserve(2000);
+            Main.getUsageLimiter().reserve(1500);
             HttpResponse<String> response = Utils.tryThis(() -> CLIENT.send(request, BodyHandlers.ofString()));
             JSONObject responseBody = new JSONObject(response.body());
 
@@ -49,7 +49,7 @@ public class OpenAI {
             String content = (String) responseBody.query(RESPONSE_POINTER);
             return content.trim();
         } finally {
-            Main.getUsageLimiter().deReserve(2000);
+            Main.getUsageLimiter().deReserve(1500);
         }
     }
 }
