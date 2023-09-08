@@ -39,7 +39,7 @@ public class SearchParser {
 
         for (BookIndex.Book book : completer.getCompletionsSorted(splitResult.rest())) {
             List<Integer> numbers = splitResult.numbers();
-            if (numbers.size() == 0) out.add(new CompletionResult(book, 1));
+            if (numbers.isEmpty()) out.add(new CompletionResult(book, 1));
             else for (Integer number : numbers) out.add(new CompletionResult(book, number));
         }
 

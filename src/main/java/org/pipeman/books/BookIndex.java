@@ -33,13 +33,14 @@ public class BookIndex {
         return books;
     }
 
-    public record Book(int id, String[] searchTerms, String title, String subject, int pageCount) {
+    public record Book(int id, String[] searchTerms, String title, String subject, int pageCount, float relevance) {
         public static Book fromJSON(int id, JSONObject json) {
             return new Book(id,
                     Utils.toStringArray(json.getJSONArray("search-terms")),
                     json.getString("title"),
                     json.getString("subject"),
-                    json.getInt("page-count")
+                    json.getInt("page-count"),
+                    json.getFloat("relevance")
             );
         }
 
