@@ -30,13 +30,19 @@ public class UsageLimit {
     public void use(int amount) {
         if (amount == 0) return;
 
+        checkReset();
+        usage += amount;
+        save();
+    }
+
+    private boolean checkReset() {
         int currentDay = Utils.getDay();
         if (lastReset < currentDay) {
             lastReset = currentDay;
             usage = 0;
+            return true;
         }
-        usage += amount;
-        save();
+        return false;
     }
 
     private void save() {
@@ -48,6 +54,8 @@ public class UsageLimit {
     }
 
     public void reserve(int amount) {
+        if (checkReset()) save();
+
         if (reserved + usage >= Main.config().dailyUsageLimit) {
             throw new LimitExceededException();
         }
