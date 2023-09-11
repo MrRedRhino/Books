@@ -50,6 +50,7 @@ public class PipeComplete {
             if (entry.similarity > 0.6) {
                 out.add(entry.book);
             }
+            if (out.size() >= 3) break;
         }
         return out;
     }
