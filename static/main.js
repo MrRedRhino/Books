@@ -135,11 +135,11 @@ function addSearchResult(ul, title, subject, page, bookId, isUploadMessage) {
     if (!isUploadMessage) li.appendChild(createThing("a", "list-element-subject", " S. " + page));
     li.appendChild(createThing("p", "list-element-subject", subject));
     if (isUploadMessage) {
-        li.addEventListener("click", () => {
+        li.addEventListener("mousedown", () => {
             location.href = "/upload"
         });
     } else {
-        li.addEventListener("click", () => {
+        li.addEventListener("mousedown", () => {
             openBook(bookId, page, true);
             hideSuggestions();
         });
