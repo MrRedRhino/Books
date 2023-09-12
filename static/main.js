@@ -20,7 +20,7 @@ document.getElementById("search").addEventListener("keyup", (event) => {
     if (event.code !== "Enter") return;
     event.preventDefault();
     const element = document.getElementById("suggestions").children.item(0);
-    if (!element.classList.contains("no-enter-select")) element.click();
+    if (!element.classList.contains("no-enter-select")) element.dispatchEvent(new Event("mousedown"));
 });
 
 addEventListener("keydown", (event) => {
