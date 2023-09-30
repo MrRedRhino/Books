@@ -248,13 +248,10 @@ button:active {
 .summary {
     background: black;
     color: var(--text-color);
-    padding: 3px;
     border-radius: 10px;
     height: calc(100% - 48px);
-}
-
-.summary h3 {
-    margin: 5px;
+    padding: 7px;
+    overflow: scroll;
 }
 
 .summary-wrapper button {
