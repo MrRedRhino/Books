@@ -6,13 +6,20 @@ import org.fit.pdfdom.PDFDomTree;
 import org.fit.pdfdom.PDFDomTreeConfig;
 import org.fit.pdfdom.resource.HtmlResource;
 import org.fit.pdfdom.resource.HtmlResourceHandler;
-import org.pipeman.books.BookIndex;
 import org.pipeman.books.utils.TerminalUtil;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class Converter {
+    private static final Pattern IMG_PATTERN = Pattern.compile("<img src=\"(.*(?=\\.jpg)).*>");
+
     public static void convertBook(int bookId, File pdfFile) throws IOException {
         ResourceHandler handler = new ResourceHandler(bookId);
         PDDocument pdf = PDDocument.load(pdfFile);
@@ -31,9 +38,21 @@ public class Converter {
             pdfDomTree.setEndPage(i);
 
             new File("book-data/html/" + bookId).mkdirs();
-            Writer output = new PrintWriter("book-data/html/" + bookId + "/" + i + ".html");
-            pdfDomTree.writeText(pdf, output);
-            output.close();
+            StringWriter htmlWriter = new StringWriter();
+            pdfDomTree.writeText(pdf, htmlWriter);
+            String html = htmlWriter.toString();
+
+            String transformedHtml = IMG_PATTERN.matcher(html).replaceFirst(result -> {
+                String match = result.group();
+                String url = result.group(1);
+                String firstTag = match.replace(url, url + "-thumbnail");
+                String secondTag = match
+                        .replace("style=\"", "style=\"z-index:100;opacity:0;")
+                        .replace("<img", "<img onload=\"this.style.opacity='1'\"");
+                return firstTag + secondTag;
+            });
+
+            Files.writeString(Path.of("book-data/html/" + bookId + "/" + i + ".html"), transformedHtml);
         }
         pdf.close();
     }
@@ -43,15 +62,11 @@ public class Converter {
         File pdf;
         float compressionQuality;
 
-        while (true) {
-            System.out.print("Enter the id for the new book (must be an integer)");
-            bookId = TerminalUtil.readInt();
-            if (BookIndex.INSTANCE.books().get(bookId) == null) break;
-            System.out.println("Id is already taken");
-        }
+        System.out.print("Enter the id for the new book (must be an integer)");
+        bookId = TerminalUtil.readInt();
 
         while (true) {
-            System.out.print("Enter the path the new pdf file > ");
+            System.out.print("Enter the path of the new pdf file > ");
             File f = new File(TerminalUtil.readLine());
             if (f.exists()) {
                 pdf = f;
@@ -91,11 +106,11 @@ public class Converter {
 
         @Override
         public String handleResource(HtmlResource resource) throws IOException {
-            String imagePath = bookId + "/" + id + ".jpg";
+            String imagePath = bookId + "/" + id;
 
             Compression.compress(new ByteArrayInputStream(resource.getData()), "book-data/images/" + imagePath);
 
-            return "/images/books/" + imagePath;
+            return "/images/books/" + imagePath + ".jpg";
         }
     }
 }

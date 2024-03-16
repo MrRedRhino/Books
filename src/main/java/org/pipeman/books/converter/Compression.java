@@ -1,5 +1,7 @@
 package org.pipeman.books.converter;
 
+import net.coobird.thumbnailator.Thumbnails;
+
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
@@ -16,8 +18,9 @@ public class Compression {
     public static void compress(InputStream input, String outputFile) throws IOException {
         BufferedImage image = removeAlphaChannel(ImageIO.read(input));
 
-        new File(outputFile).getParentFile().mkdirs();
-        OutputStream os = new FileOutputStream(outputFile);
+        File file = new File(outputFile + ".jpg");
+        file.getParentFile().mkdirs();
+        OutputStream os = new FileOutputStream(file);
 
         Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpg");
         ImageWriter writer = writers.next();
@@ -30,6 +33,10 @@ public class Compression {
         param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
         param.setCompressionQuality(compressionQuality);
         writer.write(null, new IIOImage(image, null, null), param);
+
+        Thumbnails.of(image)
+                .size(200, 200)
+                .toFile(outputFile + "-thumbnail.jpg");
 
         os.close();
         ios.close();
@@ -48,4 +55,3 @@ public class Compression {
         return target;
     }
 }
-
